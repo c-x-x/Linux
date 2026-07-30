@@ -1,5 +1,5 @@
 if (process.env.VERCEL === '1' && process.env.VERCEL_ENV === 'production') {
   console.warn(
-    'Production safe mode: the learning site will deploy, while the unverified technical-probe guest remains disabled.',
+    'Production uses the integrity-pinned upstream v86 Buildroot demo image; it is not a reproducible project-owned guest image.',
   )
 }

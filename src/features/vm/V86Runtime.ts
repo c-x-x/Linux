@@ -1,7 +1,7 @@
 import { V86 } from 'v86'
 
 export const VM_VERSION = '0.5.424'
-export const VM_IMAGE_ID = 'buildroot-linux-5.6.15-spike'
+export const VM_IMAGE_ID = 'v86-buildroot-bzimage68-probe'
 export const VM_MEMORY_SIZE = 64 * 1024 * 1024
 const VM_VGA_MEMORY_SIZE = 8 * 1024 * 1024
 const VM_CMDLINE = 'tsc=reliable mitigations=off random.trust_cpu=on'

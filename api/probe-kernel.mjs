@@ -1,15 +1,7 @@
-const SOURCE_URL = 'https://i.copy.sh/buildroot-bzimage.bin'
-const EXPECTED_SIZE = 5_166_352
+const SOURCE_URL = 'https://i.copy.sh/buildroot-bzimage68.bin'
+const EXPECTED_SIZE = 10_068_480
 
 export default async function handler(request, response) {
-  if (process.env.VERCEL_ENV === 'production') {
-    response.setHeader('Cache-Control', 'private, no-store')
-    response.status(503).send(
-      'The Linux technical probe is unavailable in production until its reproducible source and license evidence are complete.',
-    )
-    return
-  }
-
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     response.setHeader('Allow', 'GET, HEAD')
     response.status(405).send('Method Not Allowed')

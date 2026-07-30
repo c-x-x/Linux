@@ -1,5 +1,7 @@
 # Phase 0 技术可行性记录
 
+> 历史记录：本页保留首次 Preview 探针的旧镜像证据。当前运行清单已切换为 v86 官方列出的 `buildroot-bzimage68.bin`；当前大小和哈希以 `public/assets-manifest.json` 为准。
+
 记录日期：2026-07-30
 结论：**本地与 Vercel Preview 技术探针已通过多项关键运行检查，但 Phase 0 总门禁仍未通过。** 不能把当前结果描述为“正式 Bash 环境已完成”或“可部署 Production”。
 

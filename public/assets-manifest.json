@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "id": "buildroot-linux-5.6.15-spike",
+  "id": "v86-buildroot-bzimage68-probe",
   "runtimeVersion": "0.5.424",
   "distributionMode": "technical-probe-only",
   "integrityStatus": "sha256-recorded-source-unverified",
-  "notice": "Remote development probe only. It is not a production image and must not be mirrored or redistributed until the matching Buildroot sources, configuration, hashes and legal-info are available.",
+  "notice": "Upstream v86 Buildroot demo image loaded through a fixed proxy. Integrity is pinned, but this is not a reproducible project-owned guest image.",
   "assets": {
     "wasm": {
       "url": "https://cdn.jsdelivr.net/npm/v86@0.5.424/build/v86.wasm",
@@ -20,8 +20,8 @@
     },
     "kernel": {
       "url": "/api/probe-kernel",
-      "size": 5166352,
-      "sha256": "7befbaea31e249d9a518c4b95fa42b2a193d0e3de46250d617cbdeb866ee28b0",
+      "size": 10068480,
+      "sha256": "507a759c70ab7a490a233be454d0b5b88bc667956a410b531cb4edc091e2eb1c",
       "immutableReference": false
     }
   }

@@ -111,7 +111,7 @@ export default function InstallPage() {
       const saved = await writeInstallation({
         ...profile,
         status: 'configured',
-        imageId: 'buildroot-linux-5.6.15-spike',
+        imageId: 'v86-buildroot-bzimage68-probe',
         runtimeVersion: '0.5.424',
         errorMessage: null,
       })
@@ -285,11 +285,11 @@ export default function InstallPage() {
                   <span className="image-option__flag">当前可验证</span>
                   <TerminalSquare size={25} />
                   <h3>Core · 技术探针</h3>
-                  <p>Linux 5.6.15 + BusyBox 串口 Shell，用于验证真实终端链路。</p>
+                  <p>v86 官方 Buildroot 演示镜像 + BusyBox 串口 Shell，用于真实终端学习。</p>
                   <dl>
                     <div>
                       <dt>下载</dt>
-                      <dd>约 5 MB</dd>
+                      <dd>约 9.6 MiB</dd>
                     </div>
                     <div>
                       <dt>内存</dt>

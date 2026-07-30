@@ -16,7 +16,7 @@ import { V86Runtime } from '../features/vm/V86Runtime'
 
 const manifest = {
   schemaVersion: 1,
-  id: 'buildroot-linux-5.6.15-spike',
+  id: 'v86-buildroot-bzimage68-probe',
   runtimeVersion: '0.5.424',
   distributionMode: 'technical-probe-only',
   integrityStatus: 'sha256-recorded-source-unverified',

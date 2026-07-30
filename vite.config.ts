@@ -9,7 +9,7 @@ const probeProxy: Record<string, ProxyOptions> = {
     headers: {
       'user-agent': 'KernelLab-TechnicalProbe/0.1',
     },
-    rewrite: () => '/buildroot-bzimage.bin',
+    rewrite: () => '/buildroot-bzimage68.bin',
     bypass(request) {
       request.headers['user-agent'] = 'KernelLab-TechnicalProbe/0.1'
       delete request.headers.origin

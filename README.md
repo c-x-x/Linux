@@ -5,7 +5,7 @@ Kernel Lab 是一个中文 Linux 学习网站，产品分为两条相互衔接�
 - **装系统**：用教学式流程解释 Linux 镜像、文件系统、用户、主机名和首次启动配置；
 - **使用系统**：通过 v86 在浏览器内运行真实 Linux 技术探针，并用 xterm.js 连接串口终端。
 
-> 当前状态：**Phase 0 本地和 Vercel Preview 技术探针均已取得关键运行证据，但总门禁仍未通过。** Production build 已成功；Codex 内置 Chromium 已在本地与 Preview 实际启动 Linux 5.6.15 i686/BusyBox。正式 Bash/Readline、自建可分发镜像、可靠性矩阵和镜像合规材料仍未完成，因此不能宣称正式 Linux 学习环境已经交付。
+> 当前状态：**Phase 0 已取得关键运行证据，但正式自建镜像门禁仍未通过。** Production 使用 v86 官方列出的 Buildroot 演示镜像提供真实 BusyBox 终端；正式 Bash/Readline、自建可重复构建镜像和完整可靠性矩阵仍未完成。
 
 本轮本地浏览器证据包括：
 
@@ -96,19 +96,19 @@ npm run preview
 | Production Branch | `master`（当前 GitHub 默认分支） |
 | Node.js Version | 与 `package.json` 的 Node 约束兼容的受支持 LTS |
 
-推荐让 Vercel Git Integration 负责部署：功能分支和 Pull Request 生成 Preview。当前 `vercel.json` 明确关闭 `master` 的自动部署，`prebuild` 还会拒绝 Vercel Production 构建，避免技术探针意外上线；只有完成自建镜像与许可证门禁后，才能由维护者显式解除这两层保护。仓库中的 GitHub Actions 只做质量检查，不重复调用 Vercel 部署。
+推荐让 Vercel Git Integration 负责部署：功能分支和 Pull Request 生成 Preview，`master` 生成 Production。仓库中的 GitHub Actions 只做质量检查，不重复调用 Vercel 部署。
 
-当前 `/api/probe-kernel` Vercel Function 从固定上游流式转发探针字节，本地开发由同路径 Vite proxy 代替；前端仍会检查固定大小和 SHA-256。该链路已在 Preview 实际启动来宾并完成保存/恢复，Function 日志只记录到成功的 200 请求。代理、同源转发和 SHA-256 校验都不等于取得镜像再分发权；在完成镜像许可审查前，当前技术探针**禁止部署到 Production**。
+当前 `/api/probe-kernel` Vercel Function 从 v86 官方列出的固定 Buildroot 演示镜像地址流式转发字节，本地开发由同路径 Vite proxy 代替；前端检查固定大小和 SHA-256。Production 可以使用该上游演示探针，但代理、同源转发和 SHA-256 校验不等于获得了可重复构建的项目自有镜像。
 
 “零付费”只是个人、非商业学习场景在各服务免费计划和用量限制内的目标，不代表无限流量或永久免费。部署前应重新核对 [Vercel 用量与限制](https://vercel.com/docs/limits) 和 GitHub 账户用量。
 
 ## 来宾镜像
 
-仓库当前没有可分发的生产来宾镜像。`public/assets-manifest.json` 只有一个明确标记为 `technical-probe-only` 的远程探针条目：5,166,352 bytes，SHA-256 `7befbaea31e249d9a518c4b95fa42b2a193d0e3de46250d617cbdeb866ee28b0`。哈希已在浏览器下载后验证，但来源仍不是不可变引用，也没有匹配的 Buildroot 配置、源码归档、SBOM 和 `legal-info`。
+仓库当前没有项目自建的生产来宾镜像。`public/assets-manifest.json` 使用 v86 上游 `buildroot-bzimage68.bin` 演示探针：10,068,480 bytes，SHA-256 `507a759c70ab7a490a233be454d0b5b88bc667956a410b531cb4edc091e2eb1c`。哈希用于完整性验证；匹配的 Buildroot 配置、源码归档、SBOM 和 `legal-info` 仍是正式自建镜像的要求。
 
 正式版必须使用固定版本、自行构建的 Buildroot 配置，并保存构建脚本、哈希、SBOM、版权材料及 `make legal-info` 输出。详情见 [guest/README.md](guest/README.md)。
 
-在这些材料完成前，不得复制当前远程探针资源到仓库、GitHub Release 或 Vercel，也不得把它标记为 Core/Embedded 正式镜像。
+在这些材料完成前，不得复制当前远程探针资源到仓库、GitHub Release，也不得把它标记为项目自建的 Core/Embedded 正式镜像。
 
 ## 项目文档
 

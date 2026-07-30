@@ -287,7 +287,7 @@ export function TerminalPane({ onPhaseChange }: TerminalPaneProps) {
             <TerminalGlyph />
             <h3>终端尚未连接</h3>
             <p>
-              点击“启动真实 Linux”后才会下载约 5 MB
+              点击“启动真实 Linux”后才会下载约 9.6 MiB
               的技术探针。这里不会显示预先编写的命令输出。
             </p>
             {snapshotAvailable && (

@@ -36,23 +36,9 @@ function createResponse() {
 
 afterEach(() => {
   vi.unstubAllGlobals()
-  delete process.env.VERCEL_ENV
 })
 
 describe('fixed Linux probe proxy', () => {
-  it('does not distribute the unverified guest from production', async () => {
-    process.env.VERCEL_ENV = 'production'
-    const fetchMock = vi.fn()
-    vi.stubGlobal('fetch', fetchMock)
-    const response = createResponse()
-
-    await handler({ method: 'GET' }, response)
-
-    expect(response.statusCode).toBe(503)
-    expect(response.headers.get('cache-control')).toBe('private, no-store')
-    expect(fetchMock).not.toHaveBeenCalled()
-  })
-
   it('rejects methods other than GET and HEAD without contacting upstream', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
@@ -69,7 +55,7 @@ describe('fixed Linux probe proxy', () => {
     const payload = Uint8Array.of(0x4b, 0x4c, 0x41, 0x42)
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(payload, {
-        headers: { 'content-length': '5166352' },
+        headers: { 'content-length': '10068480' },
       }),
     )
     vi.stubGlobal('fetch', fetchMock)
@@ -78,7 +64,7 @@ describe('fixed Linux probe proxy', () => {
     await handler({ method: 'GET' }, response)
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://i.copy.sh/buildroot-bzimage.bin',
+      'https://i.copy.sh/buildroot-bzimage68.bin',
       expect.objectContaining({
         method: 'GET',
         headers: expect.objectContaining({
@@ -87,7 +73,7 @@ describe('fixed Linux probe proxy', () => {
       }),
     )
     expect(response.statusCode).toBe(200)
-    expect(response.headers.get('content-length')).toBe('5166352')
+    expect(response.headers.get('content-length')).toBe('10068480')
     expect(response.headers.get('vercel-cdn-cache-control')).toBe(
       'public, max-age=43200',
     )
