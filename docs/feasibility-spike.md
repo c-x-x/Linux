@@ -13,7 +13,7 @@
 | v86 | npm `0.5.424`（包元数据对应提交系列 `2f1346b`） | 已检查本地包/API，并在本地浏览器实际启动来宾 |
 | xterm.js | `@xterm/xterm` 6.0.0、`@xterm/addon-fit` 0.11.0 | 串口输入输出已在本地浏览器验证 |
 | BIOS | jsDelivr 上固定到 v86 提交 `2f1346b` 的 SeaBIOS/VGA BIOS | 本地浏览器加载通过 |
-| 测试内核 | 上游 `https://i.copy.sh/buildroot-bzimage.bin`，应用路径 `/probe-assets/buildroot-bzimage.bin` | 仅远程技术探针；不是生产镜像 |
+| 测试内核 | 上游 `https://i.copy.sh/buildroot-bzimage.bin`，应用路径 `/api/probe-kernel` | 仅远程技术探针；不是生产镜像 |
 | 测试内核大小 | 5,166,352 bytes | 清单记录并由前端下载后校验 |
 | 测试内核 SHA-256 | `7befbaea31e249d9a518c4b95fa42b2a193d0e3de46250d617cbdeb866ee28b0` | Web Crypto 校验通过；不代表来源/许可已验证 |
 | 来宾 | Linux 5.6.15、i686、BusyBox Shell | 本地真实串口输出与动态命令结果 |
@@ -23,9 +23,9 @@
 
 ## 资产加载和完整性链路
 
-当前浏览器请求同源路径 `/probe-assets/buildroot-bzimage.bin`：本地由 Vite proxy 转发，上线配置拟由 Vercel external rewrite 转发。前端读取完整响应后检查字节数，再使用 Web Crypto 计算 SHA-256；任一不匹配都会阻止 v86 启动。
+当前浏览器请求同源路径 `/api/probe-kernel`：本地由 Vite proxy 转发，上线由目标地址写死的 Vercel Function 流式转发。前端读取完整响应后检查字节数，再使用 Web Crypto 计算 SHA-256；任一不匹配都会阻止 v86 启动。
 
-本地链路已验证，Vercel rewrite 尚未实际部署。校验只能证明下载字节与清单一致，不能证明上游 URL 不可变，也不等于取得重新分发 Linux/BusyBox/Buildroot 产物的权利。
+本地链路已验证，新 Vercel Function 路径尚未实际部署。校验只能证明下载字节与清单一致，不能证明上游 URL 不可变，也不等于取得重新分发 Linux/BusyBox/Buildroot 产物的权利。
 
 ## 本地 Chromium 运行证据
 
@@ -55,7 +55,7 @@
 | 7 | `printf`、管道、重定向和退出码真实 | 部分通过 | 健康 `printf`、动态 `uname` 和 `false` 退出码 1 已验证；管道和重定向仍需单独记录 |
 | 8 | 文件刷新后仍存在 | 通过（探针流程） | 文件在保存、关闭并从 IndexedDB 恢复后存在；完整页面刷新场景仍应加入自动化回归 |
 | 9 | 保存与恢复不损坏来宾 | 通过一次（非可靠性结论） | 单次快照关闭/恢复成功；仍需循环、崩溃、配额和版本迁移测试 |
-| 10 | 镜像来源 CORS/Range | 部分通过 | 当前小型探针已通过本地同源 proxy 完整下载及大小/SHA 校验；该具体上游文件的独立 Range 记录和 Vercel rewrite 仍待补充 |
+| 10 | 镜像来源 CORS/Range | 部分通过 | 当前小型探针已通过本地同源 proxy 完整下载及大小/SHA 校验；该具体上游文件的独立 Range 记录和 Vercel Function 仍待补充 |
 | 11 | Vercel Preview 能启动 | 未验证 | 尚无 Preview URL 或在线启动证据；这是总门禁阻塞项 |
 | 12 | 无痕、存储拒绝、配额不足、下载中断 | 未验证 | 需实现/验证明确失败和恢复行为 |
 
@@ -98,7 +98,7 @@
 - `make legal-info` 输出及人工复核记录；
 - 本项目获得或满足再分发权的证据。
 
-本地 Vite proxy 或 Vercel external rewrite 不会自动补齐这些权利。探针只能用于开发验证，禁止 Production、镜像到本仓库或作为本项目 Release 资产发布。正式版必须自建固定 Buildroot，执行 `make legal-info` 并完成 [来宾镜像发布清单](../guest/README.md)。
+本地 Vite proxy 或固定目标 Vercel Function 不会自动补齐这些权利。探针只能用于开发验证，禁止 Production、镜像到本仓库或作为本项目 Release 资产发布。正式版必须自建固定 Buildroot，执行 `make legal-info` 并完成 [来宾镜像发布清单](../guest/README.md)。
 
 ## Phase 0 退出条件
 

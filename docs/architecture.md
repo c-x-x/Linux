@@ -4,7 +4,7 @@
 
 ## 系统边界
 
-Kernel Lab 是静态单页应用。React 负责安装教学、课程、命令说明和状态界面；真正的命令应由浏览器内 v86 来宾执行。Vercel 仅托管构建后的前端文件和小型清单，不承担虚拟机计算、终端后端或用户磁盘持久化。
+Kernel Lab 的核心是静态单页应用。React 负责安装教学、课程、命令说明和状态界面；真正的命令应由浏览器内 v86 来宾执行。Vercel 托管前端文件和小型清单，并用一个固定目标 Function 转发技术探针字节；它不承担虚拟机计算、终端后端或用户磁盘持久化。
 
 ```text
 浏览器
@@ -62,7 +62,7 @@ xterm.js 不在前端实现 Shell 解析器。当前本地浏览器已验证：B
 - BIOS URL 固定到 v86 提交 `2f1346b`；
 - Buildroot 探针上游 URL 为 `https://i.copy.sh/buildroot-bzimage.bin`。
 
-应用通过 `/probe-assets/buildroot-bzimage.bin` 请求 5,166,352-byte 探针。本地由 Vite proxy 转发；Vercel 配置中使用 external rewrite，但该线上路径尚未验证。前端先完整下载字节，用 Web Crypto 对大小及 SHA-256 `7befbaea31e249d9a518c4b95fa42b2a193d0e3de46250d617cbdeb866ee28b0` 做 fail-closed 校验，再把 `ArrayBuffer` 传入 v86。
+应用通过 `/api/probe-kernel` 请求 5,166,352-byte 探针。本地由 Vite proxy 转发；Vercel 使用只允许 GET/HEAD、上游 URL 写死的流式 Function，并为成功响应设置 CDN 缓存。该新线上路径尚待部署验证。前端先完整下载字节，用 Web Crypto 对大小及 SHA-256 `7befbaea31e249d9a518c4b95fa42b2a193d0e3de46250d617cbdeb866ee28b0` 做 fail-closed 校验，再把 `ArrayBuffer` 传入 v86。
 
 这个哈希证明“收到的字节符合当前记录”，不证明上游 URL 不可变，也不提供再分发许可。代理流量仍可能构成分发行为；在对应 Buildroot 配置、源码、SBOM、许可证和 `legal-info` 收齐前，探针不能用于 Production。
 
@@ -77,7 +77,7 @@ xterm.js 不在前端实现 Shell 解析器。当前本地浏览器已验证：B
   -> assets-manifest.json 固定 URL 与哈希
 ```
 
-大镜像不进入 Git 历史，也不由 Vercel Function 执行动态代理。当前 external rewrite 只是技术探针的同源传输方案，并非正式资产架构。正式选定的 Release/CDN 来源必须同时通过浏览器 CORS、需要时的 Range、完整性、实际启动和许可验证。
+大镜像不进入 Git 历史。当前固定目标 Function 只是技术探针的同源传输方案，并非正式资产架构，也不能扩展为用户可控的通用代理。正式选定的 Release/CDN 来源必须同时通过浏览器 CORS、需要时的 Range、完整性、实际启动和许可验证。
 
 ## 安装模型
 

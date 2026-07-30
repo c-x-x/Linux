@@ -9,10 +9,6 @@
   },
   "rewrites": [
     {
-      "source": "/probe-assets/buildroot-bzimage.bin",
-      "destination": "https://i.copy.sh/buildroot-bzimage.bin"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -40,7 +36,7 @@
       ]
     },
     {
-      "source": "/probe-assets/(.*)",
+      "source": "/api/probe-kernel",
       "headers": [
         {
           "key": "Content-Type",
