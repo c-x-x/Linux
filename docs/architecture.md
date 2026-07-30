@@ -1,6 +1,6 @@
 # 架构与暂定决策
 
-本文同时描述当前 Phase 0 原型和正式版目标。标为“目标”的能力不代表已经实现或验证。当前本地 Chromium 已跑通真实 Linux/BusyBox 技术探针；Vercel Preview、正式 Bash 和可分发来宾镜像仍是目标。
+本文同时描述当前 Phase 0 原型和正式版目标。标为“目标”的能力不代表已经实现或验证。当前本地 Chromium 与受保护的 Vercel Preview 已跑通真实 Linux/BusyBox 技术探针；正式 Bash 和可分发来宾镜像仍是目标。
 
 ## 系统边界
 
@@ -62,7 +62,7 @@ xterm.js 不在前端实现 Shell 解析器。当前本地浏览器已验证：B
 - BIOS URL 固定到 v86 提交 `2f1346b`；
 - Buildroot 探针上游 URL 为 `https://i.copy.sh/buildroot-bzimage.bin`。
 
-应用通过 `/api/probe-kernel` 请求 5,166,352-byte 探针。本地由 Vite proxy 转发；Vercel 使用只允许 GET/HEAD、上游 URL 写死的流式 Function，并为成功响应设置 CDN 缓存。该新线上路径尚待部署验证。前端先完整下载字节，用 Web Crypto 对大小及 SHA-256 `7befbaea31e249d9a518c4b95fa42b2a193d0e3de46250d617cbdeb866ee28b0` 做 fail-closed 校验，再把 `ArrayBuffer` 传入 v86。
+应用通过 `/api/probe-kernel` 请求 5,166,352-byte 探针。本地由 Vite proxy 转发；Vercel 使用只允许 GET/HEAD、上游 URL 写死的流式 Function，并为成功响应设置 CDN 缓存。该线上路径已返回 200，并在前端完成大小/SHA 校验后真实启动来宾。前端先完整下载字节，用 Web Crypto 对大小及 SHA-256 `7befbaea31e249d9a518c4b95fa42b2a193d0e3de46250d617cbdeb866ee28b0` 做 fail-closed 校验，再把 `ArrayBuffer` 传入 v86。
 
 这个哈希证明“收到的字节符合当前记录”，不证明上游 URL 不可变，也不提供再分发许可。代理流量仍可能构成分发行为；在对应 Buildroot 配置、源码、SBOM、许可证和 `legal-info` 收齐前，探针不能用于 Production。
 

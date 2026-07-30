@@ -1,9 +1,9 @@
 # Phase 0 技术可行性记录
 
 记录日期：2026-07-30
-结论：**本地技术探针已通过多项关键运行检查，但 Phase 0 总门禁仍未通过。** 不能把当前结果描述为“正式 Bash 环境已完成”或“可部署 Production”。
+结论：**本地与 Vercel Preview 技术探针已通过多项关键运行检查，但 Phase 0 总门禁仍未通过。** 不能把当前结果描述为“正式 Bash 环境已完成”或“可部署 Production”。
 
-本文区分三类证据：源码/API 与 HTTP 静态证据、本地 Codex 内置 Chromium 运行证据、尚未取得的 Vercel Preview/正式镜像证据。
+本文区分三类证据：源码/API 与 HTTP 静态证据、本地 Codex 内置 Chromium 运行证据、Vercel Preview 运行证据；正式镜像证据仍未取得。
 
 ## 探针版本与资产
 
@@ -25,7 +25,17 @@
 
 当前浏览器请求同源路径 `/api/probe-kernel`：本地由 Vite proxy 转发，上线由目标地址写死的 Vercel Function 流式转发。前端读取完整响应后检查字节数，再使用 Web Crypto 计算 SHA-256；任一不匹配都会阻止 v86 启动。
 
-本地链路已验证，新 Vercel Function 路径尚未实际部署。校验只能证明下载字节与清单一致，不能证明上游 URL 不可变，也不等于取得重新分发 Linux/BusyBox/Buildroot 产物的权利。
+本地链路和新 Vercel Function 路径均已验证：Preview 中 Function 返回 200，浏览器通过大小/SHA 校验并启动来宾，对应运行日志没有错误。校验只能证明下载字节与清单一致，不能证明上游 URL 不可变，也不等于取得重新分发 Linux/BusyBox/Buildroot 产物的权利。
+
+## Vercel Preview 运行证据
+
+- 项目 `kernel-lab-linux` 由 GitHub `c-x-x/Linux` 的 `preview/technical-probe` 分支自动部署；
+- 部署 `dpl_3PYW9vL6xUpE9zJKzmmsUTA7QCJ8` 状态为 `READY`，`target` 为空（Preview），不是 Production；
+- `/api/probe-kernel` 的运行日志有 2 次 HTTP 200，所查时间窗内没有运行时错误；
+- 浏览器通过健康挑战，动态返回 `ONLINE_i686` 和 `ONLINE_EXIT_1`；
+- 输入 `una` 后 Tab 补全为 `uname`；
+- 创建 `/tmp/online-snapshot` 后保存、关闭、恢复，内容 `ONLINE_SNAPSHOT_51` 仍存在；
+- Preview 启用了 Vercel Authentication，验收使用临时访问链接，稳定分支别名本身不是公开 Production 地址。
 
 ## 本地 Chromium 运行证据
 
@@ -46,17 +56,17 @@
 
 | # | 验证项 | 状态 | 当前证据 / 下一步 |
 | --- | --- | --- | --- |
-| 1 | React + Vite production build 能加载 v86 | 部分通过 | Production build 成功，本地 Vite 浏览器运行 v86 成功；仍需用构建产物 Preview/静态预览确认运行链路 |
+| 1 | React + Vite production build 能加载 v86 | 通过（探针） | 本地 production build 与 Vercel Preview 均实际运行 v86 |
 | 2 | 最小 Linux 镜像在桌面 Chromium 启动 | 通过（本地探针） | Codex 内置 Chromium 启动 Linux 5.6.15 i686/BusyBox；精确浏览器版本待登记 |
 | 3 | xterm.js 与来宾串口双向通信 | 通过（本地探针） | 健康挑战和交互命令均从串口返回 |
 | 4 | Bash 提示符正常出现 | 未满足 | 当前是 BusyBox Shell；正式自建镜像必须加入 Bash/Readline |
 | 5 | Tab 命令和文件补全 | 部分通过 | BusyBox 中 `una` + Tab -> `uname`；Bash 命令补全和文件补全尚未验证 |
 | 6 | Ctrl+C、方向键和 resize | 部分通过 | Ctrl+C、`↑` 历史通过；终端 resize 行为尚未单独记录，390×844 页面布局无横向溢出 |
 | 7 | `printf`、管道、重定向和退出码真实 | 部分通过 | 健康 `printf`、动态 `uname` 和 `false` 退出码 1 已验证；管道和重定向仍需单独记录 |
-| 8 | 文件刷新后仍存在 | 通过（探针流程） | 文件在保存、关闭并从 IndexedDB 恢复后存在；完整页面刷新场景仍应加入自动化回归 |
-| 9 | 保存与恢复不损坏来宾 | 通过一次（非可靠性结论） | 单次快照关闭/恢复成功；仍需循环、崩溃、配额和版本迁移测试 |
-| 10 | 镜像来源 CORS/Range | 部分通过 | 当前小型探针已通过本地同源 proxy 完整下载及大小/SHA 校验；该具体上游文件的独立 Range 记录和 Vercel Function 仍待补充 |
-| 11 | Vercel Preview 能启动 | 未验证 | 尚无 Preview URL 或在线启动证据；这是总门禁阻塞项 |
+| 8 | 文件刷新后仍存在 | 通过（探针流程） | 本地和 Preview 都在保存、关闭并从 IndexedDB 恢复后读回文件；完整页面刷新仍应加入自动化回归 |
+| 9 | 保存与恢复不损坏来宾 | 通过两条环境链路（非可靠性结论） | 本地和 Preview 各完成一次最新指纹快照恢复；仍需循环、崩溃、配额和版本迁移测试 |
+| 10 | 镜像来源 CORS/Range | 部分通过 | 本地 proxy 与 Vercel Function 均完成整文件传输及大小/SHA 校验；独立 Range 记录仍待补充 |
+| 11 | Vercel Preview 能启动 | 通过（受保护探针） | GitHub 分支自动部署为 READY，真实 Linux 健康挑战、动态命令、Tab 和快照恢复通过 |
 | 12 | 无痕、存储拒绝、配额不足、下载中断 | 未验证 | 需实现/验证明确失败和恢复行为 |
 
 ## 其他 UI 验证
@@ -102,11 +112,10 @@
 
 ## Phase 0 退出条件
 
-仍需附上 Vercel Preview URL 和在线启动证据、精确浏览器版本、耗时/内存，以及所有未通过项的可复查日志。至少以下核心项未通过时，不得宣布 Phase 0 完成：
+Vercel Preview URL 与在线启动证据已经取得；仍需精确浏览器版本、耗时/内存，以及所有未通过项的可复查日志。至少以下核心项未通过时，不得宣布 Phase 0 完成：
 
 1. 正式自建镜像中的 Bash/Readline 命令与文件 Tab 补全；
 2. 多轮、可恢复且具备故障处理的持久化；
-3. Vercel Preview 中真实 Linux 正常启动；
-4. 镜像构建和再分发合规材料完整。
+3. 镜像构建和再分发合规材料完整。
 
-当前可以宣传“本地浏览器已运行真实 Linux/BusyBox 技术探针”，不能宣传“完整真实 Bash 学习环境已经完成”。
+当前可以宣传“本地和受保护的 Vercel Preview 已运行真实 Linux/BusyBox 技术探针”，不能宣传“完整真实 Bash 学习环境已经完成”。
