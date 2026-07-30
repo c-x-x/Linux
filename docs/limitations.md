@@ -5,7 +5,7 @@
 ## 当前发布阻塞项
 
 - 本地 Codex 内置 Chromium 已完成 v86 启动和串口双向交互探针，但精确浏览器版本尚未登记，尚未形成跨浏览器矩阵；
-- 尚未在 Vercel Preview 上验证真实来宾启动；
+- 受保护的 Vercel Preview 已验证真实来宾启动，但尚无公开 Production 发布资格；
 - 当前远程探针是 Linux 5.6.15 i686/BusyBox；BusyBox Tab、`↑` 历史、Ctrl+C 和退出码已有本地证据，但未证明 Bash、Readline 和 bash-completion 可用；
 - `printf` 健康挑战和 `false` 退出码已验证，管道、重定向、完整方向键集和终端 resize 仍缺单独证据；
 - IndexedDB 快照已通过一次保存/关闭/恢复并保留文件，并绑定完整虚拟机配置指纹；但尚无循环、崩溃恢复、配额不足和版本迁移证据；
@@ -66,6 +66,6 @@ Linux 没有封闭的“所有命令”集合。正式可验收口径是：网�
 
 ## 免费部署边界
 
-GitHub + Vercel 可以在个人学习、流量较低且符合免费计划条款时实现零现金成本，但免费额度、可接受用途和限制会变化。Vercel Preview 已创建，但新 Function 传输链路仍待重新部署验证，且当前探针没有生产许可结论；技术探针禁止 Production，`vercel.json` 因此关闭了 `master` 的 Git 自动部署。本项目不提供云端虚拟机、WebSocket TCP 中继或云端持久化。
+GitHub + Vercel 可以在个人学习、流量较低且符合免费计划条款时实现零现金成本，但免费额度、可接受用途和限制会变化。受保护的 Vercel Preview 已验证 Function 传输、真实启动和快照恢复，但当前探针仍没有生产许可结论；技术探针禁止 Production，`vercel.json` 因此关闭了 `master` 的 Git 自动部署，`prebuild` 也会拒绝 Production。本项目不提供云端虚拟机、WebSocket TCP 中继或云端持久化。
 
 每次发布前都应重新检查服务条款和用量。不能把“当前目标为零付费”表述为永久免费或无限使用保证。

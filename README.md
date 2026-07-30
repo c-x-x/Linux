@@ -5,7 +5,7 @@ Kernel Lab 是一个中文 Linux 学习网站，产品分为两条相互衔接�
 - **装系统**：用教学式流程解释 Linux 镜像、文件系统、用户、主机名和首次启动配置；
 - **使用系统**：通过 v86 在浏览器内运行真实 Linux 技术探针，并用 xterm.js 连接串口终端。
 
-> 当前状态：**Phase 0 本地技术探针已取得关键运行证据，但总门禁仍未通过。** Production build 已成功；Codex 内置 Chromium 已实际启动 Linux 5.6.15 i686/BusyBox，串口交互、BusyBox Tab、命令历史、Ctrl+C、退出码以及 IndexedDB 保存/关闭/恢复均有一次通过记录。正式 Bash/Readline、自建可分发镜像和 Vercel Preview 仍未完成，因此不能宣称正式 Linux 学习环境已经交付。
+> 当前状态：**Phase 0 本地和 Vercel Preview 技术探针均已取得关键运行证据，但总门禁仍未通过。** Production build 已成功；Codex 内置 Chromium 已在本地与 Preview 实际启动 Linux 5.6.15 i686/BusyBox。正式 Bash/Readline、自建可分发镜像、可靠性矩阵和镜像合规材料仍未完成，因此不能宣称正式 Linux 学习环境已经交付。
 
 本轮本地浏览器证据包括：
 
@@ -17,7 +17,9 @@ Kernel Lab 是一个中文 Linux 学习网站，产品分为两条相互衔接�
 - 六步安装流程能把安装配置联动到 `ready` 状态；
 - 所有静态路由检查时无控制台错误，390×844 视口无页面横向溢出。
 
-这些结果来自本地 Codex 内置 Chromium，不是 Vercel Preview 证据；浏览器的精确 Chromium 版本和性能耗时尚未记录。
+同一组核心链路还在 Vercel Preview 重新验证：Function 请求为 200，前端大小/SHA 校验后出现真实健康标记；动态架构、退出码、BusyBox Tab 和带配置指纹的保存/关闭/恢复均通过，且对应 Function 运行日志没有错误。浏览器的精确 Chromium 版本和性能耗时尚未记录。
+
+当前受 Vercel Authentication 保护的稳定预览分支地址是 [kernel-lab-linux-git-preview-technical-probe-cxxs-projects.vercel.app](https://kernel-lab-linux-git-preview-technical-probe-cxxs-projects.vercel.app)。它用于验收，不是 Production 公网发布。
 
 ## 技术边界
 
@@ -96,7 +98,7 @@ npm run preview
 
 推荐让 Vercel Git Integration 负责部署：功能分支和 Pull Request 生成 Preview。当前 `vercel.json` 明确关闭 `master` 的自动部署，`prebuild` 还会拒绝 Vercel Production 构建，避免技术探针意外上线；只有完成自建镜像与许可证门禁后，才能由维护者显式解除这两层保护。仓库中的 GitHub Actions 只做质量检查，不重复调用 Vercel 部署。
 
-当前 `/api/probe-kernel` Vercel Function 从固定上游流式转发探针字节，本地开发由同路径 Vite proxy 代替；前端仍会检查固定大小和 SHA-256。这条新链路尚需在下一次 Vercel Preview 验证。代理、同源转发和 SHA-256 校验都不等于取得镜像再分发权。在把 Preview 提升为生产前，必须在 Preview 地址重新验证真实启动、串口输入输出、Tab、保存/恢复和失败提示，并完成镜像许可审查。当前技术探针**禁止部署到 Production**。
+当前 `/api/probe-kernel` Vercel Function 从固定上游流式转发探针字节，本地开发由同路径 Vite proxy 代替；前端仍会检查固定大小和 SHA-256。该链路已在 Preview 实际启动来宾并完成保存/恢复，Function 日志只记录到成功的 200 请求。代理、同源转发和 SHA-256 校验都不等于取得镜像再分发权；在完成镜像许可审查前，当前技术探针**禁止部署到 Production**。
 
 “零付费”只是个人、非商业学习场景在各服务免费计划和用量限制内的目标，不代表无限流量或永久免费。部署前应重新核对 [Vercel 用量与限制](https://vercel.com/docs/limits) 和 GitHub 账户用量。
 

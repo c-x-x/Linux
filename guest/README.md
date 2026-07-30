@@ -80,6 +80,6 @@ Embedded 镜像是后续阶段，必须独立构建和验收，不能只在 UI �
 
 ## 发布位置
 
-大镜像不得进入 Git 历史或 Vercel 静态输出。当前 Vite proxy / 固定目标 Vercel Function 只为技术探针解决同源加载：代理远程字节不等于取得再分发权，新 Function 路径也尚未在 Preview 实测，因此禁止用于 Production。正式镜像应使用经许可审核的独立 Release/CDN 资产，而不是长期消耗 Function 流量。
+大镜像不得进入 Git 历史或 Vercel 静态输出。当前 Vite proxy / 固定目标 Vercel Function 只为技术探针解决同源加载：Function 已在受保护 Preview 真实启动来宾，但代理远程字节不等于取得再分发权，因此仍禁止用于 Production。正式镜像应使用经许可审核的独立 Release/CDN 资产，而不是长期消耗 Function 流量。
 
 正式候选方案是 GitHub Release 的不可变版本资产；发布前必须从浏览器实际验证 CORS、需要时的 Range、内容长度、哈希和 v86 启动，并完成许可证/源码提供审查。如果 Release 资产不满足要求，应先记录失败证据并评估其他零成本静态来源，不能静默改用 Vercel 承载。
