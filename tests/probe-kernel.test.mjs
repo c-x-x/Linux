@@ -34,9 +34,25 @@ function createResponse() {
   }
 }
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  delete process.env.VERCEL_ENV
+})
 
 describe('fixed Linux probe proxy', () => {
+  it('does not distribute the unverified guest from production', async () => {
+    process.env.VERCEL_ENV = 'production'
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const response = createResponse()
+
+    await handler({ method: 'GET' }, response)
+
+    expect(response.statusCode).toBe(503)
+    expect(response.headers.get('cache-control')).toBe('private, no-store')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it('rejects methods other than GET and HEAD without contacting upstream', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
