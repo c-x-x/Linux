@@ -8,7 +8,13 @@ export type CommandCategory =
   | '搜索与批处理'
   | '权限管理'
   | '进程与作业'
-  | '归档与识别';
+  | '归档与识别'
+  | 'Shell 基础'
+  | '用户与身份'
+  | '磁盘与文件系统'
+  | '网络诊断'
+  | '软件与服务'
+  | '开发与运维';
 
 export type CommandExample = {
   command: string;
@@ -33,10 +39,10 @@ const pendingVerification = {
   verified: false,
   verificationStatus: 'pending-guest-manifest',
   verificationNote:
-    '等待来宾镜像 command-manifest.json 验证；界面不得据此宣称命令已经安装。',
+    '当前 Linux 环境尚未提供命令清单；请先用 command -v 检查是否可用。',
 } as const;
 
-export const commandDocs = [
+const coreCommandDocs = [
   {
     name: 'pwd',
     category: '系统信息',
@@ -698,3 +704,105 @@ export const commandDocs = [
     ...pendingVerification,
   },
 ] as const satisfies readonly CommandDoc[];
+
+type AdditionalCommand = {
+  name: string;
+  category: CommandCategory;
+  summary: string;
+  syntax: string;
+  example: string;
+  exampleDescription: string;
+  helpCommand?: string;
+  dangerLevel?: CommandDangerLevel;
+};
+
+const additionalCommands: readonly AdditionalCommand[] = [
+  { name: 'echo', category: 'Shell 基础', summary: '输出文本或变量值，常用于脚本提示和快速检查环境变量。', syntax: 'echo [OPTION]... [STRING]...', example: 'echo "$HOME"', exampleDescription: '显示当前用户的主目录。' },
+  { name: 'printf', category: 'Shell 基础', summary: '按指定格式输出文本，比 echo 更适合可移植脚本。', syntax: 'printf FORMAT [ARGUMENT]...', example: "printf 'name=%s\\n' \"$USER\"", exampleDescription: '按固定格式输出用户名。' },
+  { name: 'clear', category: 'Shell 基础', summary: '清理当前终端显示区域，不会删除命令历史。', syntax: 'clear', example: 'clear', exampleDescription: '清理终端画面。' },
+  { name: 'history', category: 'Shell 基础', summary: '查看当前 Shell 保存的历史命令。', syntax: 'history [N]', example: 'history 20', exampleDescription: '查看最近二十条历史记录。', helpCommand: 'help history' },
+  { name: 'alias', category: 'Shell 基础', summary: '为较长命令定义当前 Shell 会话内的简短别名。', syntax: 'alias [NAME[=VALUE]...]', example: "alias ll='ls -lah'", exampleDescription: '创建常用的详细列表别名。', helpCommand: 'help alias' },
+  { name: 'env', category: 'Shell 基础', summary: '显示环境变量，或在临时环境中运行命令。', syntax: 'env [OPTION]... [NAME=VALUE]... [COMMAND]', example: 'env | sort', exampleDescription: '按名称排序查看环境变量。' },
+  { name: 'export', category: 'Shell 基础', summary: '把 Shell 变量导出给随后启动的子进程。', syntax: 'export NAME=VALUE', example: 'export EDITOR=vi', exampleDescription: '为当前会话设置默认编辑器。', helpCommand: 'help export' },
+  { name: 'which', category: 'Shell 基础', summary: '查找 PATH 中将被执行的命令文件。', syntax: 'which COMMAND...', example: 'which sh', exampleDescription: '查找 sh 的命令路径。' },
+  { name: 'command', category: 'Shell 基础', summary: '判断命令是否存在，或绕过同名函数和别名执行命令。', syntax: 'command [-vV] NAME', example: 'command -v busybox', exampleDescription: '检查 BusyBox 是否存在。', helpCommand: 'help command' },
+  { name: 'test', category: 'Shell 基础', summary: '判断文件、字符串或数字条件，退出码表示真假。', syntax: 'test EXPRESSION', example: 'test -f /etc/os-release && echo yes', exampleDescription: '判断发行版信息文件是否存在。', helpCommand: 'help test' },
+  { name: 'date', category: '系统信息', summary: '显示或格式化系统日期时间；修改时间通常需要管理员权限。', syntax: 'date [OPTION]... [+FORMAT]', example: "date '+%F %T %Z'", exampleDescription: '显示日期、时间与时区。' },
+  { name: 'uptime', category: '系统信息', summary: '显示系统运行时长和负载平均值。', syntax: 'uptime', example: 'uptime', exampleDescription: '查看启动多久及近期负载。' },
+  { name: 'free', category: '系统信息', summary: '查看物理内存和 Swap 的使用情况。', syntax: 'free [OPTION]', example: 'free -h', exampleDescription: '以易读单位查看内存。' },
+  { name: 'dmesg', category: '系统信息', summary: '读取内核环形缓冲区，常用于启动和驱动故障排查。', syntax: 'dmesg [OPTION]...', example: 'dmesg | tail -n 30', exampleDescription: '查看最近的内核消息。' },
+  { name: 'whoami', category: '用户与身份', summary: '显示当前命令的有效用户名。', syntax: 'whoami', example: 'whoami', exampleDescription: '确认当前身份。' },
+  { name: 'id', category: '用户与身份', summary: '显示用户 ID、主组和附加组。', syntax: 'id [USER]', example: 'id', exampleDescription: '查看当前用户的 UID、GID 与组。' },
+  { name: 'groups', category: '用户与身份', summary: '列出用户所属的组。', syntax: 'groups [USER]...', example: 'groups', exampleDescription: '查看当前用户组。' },
+  { name: 'who', category: '用户与身份', summary: '显示当前登录会话及其终端。', syntax: 'who [OPTION]...', example: 'who', exampleDescription: '查看当前登录用户。' },
+  { name: 'passwd', category: '用户与身份', summary: '修改用户密码；生产环境应遵守密码和审计策略。', syntax: 'passwd [USER]', example: 'passwd', exampleDescription: '修改当前用户密码。', dangerLevel: 'caution' },
+  { name: 'su', category: '用户与身份', summary: '切换用户身份并可启动登录 Shell。', syntax: 'su [-] [USER]', example: 'su - appuser', exampleDescription: '切换为 appuser 的登录环境。', dangerLevel: 'caution' },
+  { name: 'sudo', category: '用户与身份', summary: '按策略临时以其他身份执行单条命令，并留下审计记录。', syntax: 'sudo [OPTION] COMMAND', example: 'sudo systemctl status ssh', exampleDescription: '以授权身份查看 SSH 服务。', dangerLevel: 'caution' },
+  { name: 'stat', category: '文件与目录', summary: '显示文件类型、权限、inode、大小和时间戳等详细元数据。', syntax: 'stat [OPTION]... FILE...', example: 'stat /etc/passwd', exampleDescription: '查看文件的完整元数据。' },
+  { name: 'readlink', category: '文件与目录', summary: '读取符号链接目标，-f 可解析完整规范路径。', syntax: 'readlink [OPTION]... FILE...', example: 'readlink -f /bin/sh', exampleDescription: '解析 /bin/sh 最终指向的位置。' },
+  { name: 'basename', category: '文件与目录', summary: '从路径中移除目录部分，留下最后一个名称。', syntax: 'basename NAME [SUFFIX]', example: 'basename /var/log/syslog', exampleDescription: '输出 syslog。' },
+  { name: 'dirname', category: '文件与目录', summary: '从路径中移除最后一个名称，留下目录部分。', syntax: 'dirname NAME', example: 'dirname /var/log/syslog', exampleDescription: '输出 /var/log。' },
+  { name: 'du', category: '磁盘与文件系统', summary: '统计文件和目录占用的磁盘空间。', syntax: 'du [OPTION]... [FILE]...', example: 'du -sh /var/log', exampleDescription: '汇总日志目录占用。' },
+  { name: 'df', category: '磁盘与文件系统', summary: '查看已挂载文件系统的容量、已用空间和可用空间。', syntax: 'df [OPTION]... [FILE]...', example: 'df -hT', exampleDescription: '查看文件系统类型和容量。' },
+  { name: 'lsblk', category: '磁盘与文件系统', summary: '以树形结构列出块设备、分区和挂载点。', syntax: 'lsblk [OPTION]...', example: 'lsblk -f', exampleDescription: '查看块设备文件系统与 UUID。' },
+  { name: 'blkid', category: '磁盘与文件系统', summary: '识别块设备的文件系统类型、标签和 UUID。', syntax: 'blkid [DEVICE]...', example: 'sudo blkid', exampleDescription: '列出可识别的块设备。', dangerLevel: 'caution' },
+  { name: 'mount', category: '磁盘与文件系统', summary: '把文件系统连接到目录树中的挂载点。', syntax: 'mount [OPTION] DEVICE DIRECTORY', example: 'mount | column -t', exampleDescription: '查看当前挂载关系。', dangerLevel: 'caution' },
+  { name: 'umount', category: '磁盘与文件系统', summary: '安全卸载文件系统；应先确保没有进程占用。', syntax: 'umount [OPTION] TARGET', example: 'sudo umount /mnt/data', exampleDescription: '卸载指定挂载点。', dangerLevel: 'dangerous' },
+  { name: 'fdisk', category: '磁盘与文件系统', summary: '查看或编辑磁盘分区表，写入操作可能破坏全部数据。', syntax: 'fdisk [OPTION] DEVICE', example: 'sudo fdisk -l', exampleDescription: '只读列出磁盘分区表。', dangerLevel: 'dangerous' },
+  { name: 'sync', category: '磁盘与文件系统', summary: '要求内核把缓存中的文件系统写入提交到底层存储。', syntax: 'sync', example: 'sync', exampleDescription: '在安全移除介质前刷新写入。', dangerLevel: 'caution' },
+  { name: 'top', category: '进程与作业', summary: '交互查看进程、CPU、内存和负载。', syntax: 'top', example: 'top', exampleDescription: '实时观察系统资源与进程。' },
+  { name: 'pgrep', category: '进程与作业', summary: '按名称或其他属性查找进程 ID。', syntax: 'pgrep [OPTION] PATTERN', example: 'pgrep -a sshd', exampleDescription: '查找 sshd 进程并显示命令行。' },
+  { name: 'pkill', category: '进程与作业', summary: '按名称向进程发送信号，范围比 kill 更容易误选。', syntax: 'pkill [OPTION] PATTERN', example: 'pkill -TERM demo-worker', exampleDescription: '请求结束匹配的实验进程。', dangerLevel: 'dangerous' },
+  { name: 'nice', category: '进程与作业', summary: '以指定调度优先级启动程序。', syntax: 'nice [-n N] COMMAND', example: 'nice -n 10 ./build.sh', exampleDescription: '以较低 CPU 优先级执行构建。', dangerLevel: 'caution' },
+  { name: 'nohup', category: '进程与作业', summary: '让命令忽略挂断信号，退出终端后仍可继续。', syntax: 'nohup COMMAND [ARG]... &', example: 'nohup ./worker.sh >worker.log 2>&1 &', exampleDescription: '后台运行任务并保存日志。', dangerLevel: 'caution' },
+  { name: 'ip', category: '网络诊断', summary: '查看和配置网卡、地址、路由与邻居表。', syntax: 'ip [OPTION] OBJECT COMMAND', example: 'ip address show', exampleDescription: '查看所有接口与地址。', dangerLevel: 'caution' },
+  { name: 'ping', category: '网络诊断', summary: '发送 ICMP 回显请求，检查基本连通性和时延。', syntax: 'ping [OPTION] DESTINATION', example: 'ping -c 4 1.1.1.1', exampleDescription: '发送四次连通性探测。' },
+  { name: 'ss', category: '网络诊断', summary: '查看监听端口、连接和套接字统计，是 netstat 的现代替代。', syntax: 'ss [OPTION] [FILTER]', example: 'ss -lntup', exampleDescription: '查看监听中的 TCP/UDP 端口。' },
+  { name: 'hostname', category: '网络诊断', summary: '显示系统主机名；修改主机名通常交给 hostnamectl。', syntax: 'hostname [OPTION]', example: 'hostname', exampleDescription: '显示当前主机名。' },
+  { name: 'nslookup', category: '网络诊断', summary: '查询 DNS 名称和地址记录。', syntax: 'nslookup NAME [SERVER]', example: 'nslookup example.com', exampleDescription: '查询域名解析结果。' },
+  { name: 'traceroute', category: '网络诊断', summary: '探测数据包到目标途经的网络跳点。', syntax: 'traceroute [OPTION] HOST', example: 'traceroute example.com', exampleDescription: '观察到目标的路由路径。' },
+  { name: 'curl', category: '网络诊断', summary: '通过 HTTP 等协议传输数据，常用于 API、健康检查和下载。', syntax: 'curl [OPTION]... URL', example: 'curl -I https://example.com', exampleDescription: '只获取 HTTP 响应头。' },
+  { name: 'wget', category: '网络诊断', summary: '从网络下载文件，适合非交互任务和断点续传。', syntax: 'wget [OPTION]... URL', example: 'wget -O page.html https://example.com', exampleDescription: '把页面保存为指定文件。', dangerLevel: 'caution' },
+  { name: 'ssh', category: '网络诊断', summary: '加密登录远程 Linux 主机并执行命令。', syntax: 'ssh [OPTION] [USER@]HOST', example: 'ssh student@server.example', exampleDescription: '登录远程学习服务器。', dangerLevel: 'caution' },
+  { name: 'scp', category: '网络诊断', summary: '通过 SSH 安全复制文件。', syntax: 'scp [OPTION] SOURCE DEST', example: 'scp report.txt student@server:/tmp/', exampleDescription: '上传报告到远程临时目录。', dangerLevel: 'caution' },
+  { name: 'apt', category: '软件与服务', summary: '在 Debian/Ubuntu 中搜索、安装、升级和删除软件包。', syntax: 'apt [OPTION] COMMAND', example: 'sudo apt update', exampleDescription: '刷新软件包索引。', dangerLevel: 'caution' },
+  { name: 'dpkg', category: '软件与服务', summary: '查询或操作 Debian deb 软件包，是 apt 下层工具之一。', syntax: 'dpkg [OPTION] ACTION', example: 'dpkg -l | head', exampleDescription: '查看部分已安装软件包。', dangerLevel: 'caution' },
+  { name: 'systemctl', category: '软件与服务', summary: '管理 systemd 服务、目标单元和系统状态。', syntax: 'systemctl [OPTION] COMMAND [UNIT]', example: 'systemctl status ssh', exampleDescription: '查看 SSH 服务状态。', dangerLevel: 'caution' },
+  { name: 'journalctl', category: '软件与服务', summary: '查询 systemd 日志，可按服务、时间和优先级筛选。', syntax: 'journalctl [OPTION]...', example: 'journalctl -u ssh --since today', exampleDescription: '查看今天的 SSH 服务日志。' },
+  { name: 'crontab', category: '软件与服务', summary: '查看或编辑当前用户的周期任务。', syntax: 'crontab [-l|-e|-r]', example: 'crontab -l', exampleDescription: '只读查看当前用户计划任务。', dangerLevel: 'caution' },
+  { name: 'gzip', category: '归档与识别', summary: '使用 gzip 压缩单个数据流或文件。', syntax: 'gzip [OPTION]... FILE...', example: 'gzip -k app.log', exampleDescription: '保留原文件并生成 app.log.gz。', dangerLevel: 'caution' },
+  { name: 'gunzip', category: '归档与识别', summary: '解压 gzip 文件。', syntax: 'gunzip [OPTION]... FILE...', example: 'gunzip -k app.log.gz', exampleDescription: '保留压缩包并解压。', dangerLevel: 'caution' },
+  { name: 'zip', category: '归档与识别', summary: '创建跨平台常用的 ZIP 归档。', syntax: 'zip [OPTION] ARCHIVE FILE...', example: 'zip -r project.zip project/', exampleDescription: '递归打包项目目录。', dangerLevel: 'caution' },
+  { name: 'unzip', category: '归档与识别', summary: '列出或解压 ZIP 归档；解压前应检查路径。', syntax: 'unzip [OPTION] ARCHIVE', example: 'unzip -l project.zip', exampleDescription: '只查看归档清单。', dangerLevel: 'caution' },
+  { name: 'diff', category: '文本处理', summary: '逐行比较文本文件或目录，常用于审查配置变化。', syntax: 'diff [OPTION]... FILES', example: 'diff -u config.old config.new', exampleDescription: '以统一格式显示配置差异。' },
+  { name: 'tee', category: '文本处理', summary: '把标准输入同时写到屏幕和文件。', syntax: 'tee [OPTION]... FILE...', example: 'printf "ok\\n" | tee result.txt', exampleDescription: '显示并保存同一份输出。', dangerLevel: 'caution' },
+  { name: 'tr', category: '文本处理', summary: '替换、压缩或删除字符，适合简单字符级管道处理。', syntax: 'tr [OPTION] SET1 [SET2]', example: "printf 'linux' | tr 'a-z' 'A-Z'", exampleDescription: '把小写字母转换为大写。' },
+  { name: 'od', category: '归档与识别', summary: '以八进制、十六进制或字符形式查看原始字节。', syntax: 'od [OPTION]... [FILE]...', example: 'od -An -tx1 -N16 firmware.bin', exampleDescription: '查看固件前 16 字节。' },
+  { name: 'sleep', category: 'Shell 基础', summary: '等待指定时间，常用于脚本重试和节流。', syntax: 'sleep NUMBER[SUFFIX]', example: 'sleep 2', exampleDescription: '暂停两秒。' },
+  { name: 'reboot', category: '软件与服务', summary: '重新启动系统，会中断全部进程和未保存工作。', syntax: 'reboot', example: 'sudo reboot', exampleDescription: '在维护窗口内重启系统。', dangerLevel: 'dangerous' },
+  { name: 'shutdown', category: '软件与服务', summary: '按计划关机或重启，并通知登录用户。', syntax: 'shutdown [OPTION] TIME [MESSAGE]', example: "sudo shutdown -h +10 'maintenance'", exampleDescription: '十分钟后关机并广播原因。', dangerLevel: 'dangerous' },
+];
+
+function createAdditionalCommand(command: AdditionalCommand): CommandDoc {
+  return {
+    name: command.name,
+    category: command.category,
+    summary: command.summary,
+    syntax: [command.syntax],
+    examples: [
+      {
+        command: command.example,
+        description: command.exampleDescription,
+        destructive: command.dangerLevel === 'dangerous',
+      },
+    ],
+    dangerLevel: command.dangerLevel ?? 'safe',
+    helpCommand: command.helpCommand ?? `${command.name} --help`,
+    ...pendingVerification,
+  };
+}
+
+export const commandDocs: readonly CommandDoc[] = [
+  ...coreCommandDocs,
+  ...additionalCommands.map(createAdditionalCommand),
+];

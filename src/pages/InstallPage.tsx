@@ -345,34 +345,35 @@ export default function InstallPage() {
                   type="button"
                   className="image-option image-option--locked"
                   disabled
-                  aria-label="Debian 镜像准备中"
+                  aria-label="Debian 12 i386 镜像构建中"
                 >
-                  <span className="image-option__flag">镜像准备中</span>
+                  <span className="image-option__flag">构建路线已确定</span>
                   <Server size={25} />
                   <h3>Debian</h3>
-                  <p>计划提供 apt、完整 GNU 用户空间和更接近服务器的学习环境。</p>
+                  <p>Debian 12 Bookworm i386：计划提供 apt、GNU 用户空间和接近服务器的学习环境。</p>
                   <div className="locked-line">
-                    <LockKeyhole size={15} /> 尚未接入可验证的浏览器镜像
+                    <LockKeyhole size={15} /> 等待轻量镜像构建与浏览器启动验收
                   </div>
                 </button>
                 <button
                   type="button"
                   className="image-option image-option--locked"
                   disabled
-                  aria-label="Ubuntu 镜像准备中"
+                  aria-label="Ubuntu 当前为课程内容"
                 >
-                  <span className="image-option__flag">镜像准备中</span>
+                  <span className="image-option__flag">课程已纳入</span>
                   <Cpu size={25} />
                   <h3>Ubuntu</h3>
-                  <p>计划提供熟悉的 Ubuntu 命令、apt 软件管理与基础服务课程。</p>
+                  <p>提供 Ubuntu 命令、apt、服务管理和企业应用知识；暂不提供过期的 32 位系统。</p>
                   <div className="locked-line">
-                    <LockKeyhole size={15} /> 体积与 32 位兼容性仍需验证
+                    <LockKeyhole size={15} /> 现代 Ubuntu 需要后续 64 位虚拟机路线
                   </div>
                 </button>
               </div>
               <div className="notice notice--warning">
                 <AlertTriangle size={18} />
-                Debian 和 Ubuntu 已加入安装规划，但目前不可选择；网站不会用 Buildroot 冒充它们。
+                Debian 12 i386 已确定为下一套真实镜像；Ubuntu 先进入课程体系。当前 v86 只支持 32 位，
+                网站不会用 Buildroot 或已停止标准支持的旧 Ubuntu 冒充现代 Ubuntu。
               </div>
             </div>
           )}

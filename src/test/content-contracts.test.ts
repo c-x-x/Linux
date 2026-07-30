@@ -2,78 +2,40 @@ import { describe, expect, it } from 'vitest'
 import { commandDocs } from '../content/commands'
 import { courseLessons } from '../content/courses'
 
-const expectedCommands = [
-  'pwd',
-  'ls',
-  'cd',
-  'mkdir',
-  'touch',
-  'cp',
-  'mv',
-  'rm',
-  'ln',
-  'cat',
-  'less',
-  'head',
-  'tail',
-  'grep',
-  'sed',
-  'awk',
-  'find',
-  'xargs',
-  'sort',
-  'uniq',
-  'wc',
-  'cut',
-  'chmod',
-  'chown',
-  'ps',
-  'kill',
-  'jobs',
-  'tar',
-  'file',
-  'uname',
-] as const
-
-describe('starter command library', () => {
-  it('keeps the exact 30-command MVP scope and order', () => {
-    expect(commandDocs).toHaveLength(30)
-    expect(commandDocs.map(({ name }) => name)).toEqual(expectedCommands)
+describe('Linux command library', () => {
+  it('covers common command families without duplicate names', () => {
+    expect(commandDocs.length).toBeGreaterThanOrEqual(85)
+    expect(new Set(commandDocs.map(({ name }) => name)).size).toBe(commandDocs.length)
+    for (const name of ['pwd', 'chmod', 'systemctl', 'journalctl', 'ip', 'ssh', 'apt', 'lsblk', 'dmesg']) {
+      expect(commandDocs.some((command) => command.name === name)).toBe(true)
+    }
   })
 
-  it('marks every command as pending guest-manifest verification', () => {
+  it('documents syntax, examples, help and runtime availability honestly', () => {
     for (const command of commandDocs) {
+      expect(command.summary.length).toBeGreaterThan(5)
+      expect(command.syntax.length).toBeGreaterThan(0)
+      expect(command.examples.length).toBeGreaterThan(0)
+      expect(command.helpCommand.length).toBeGreaterThan(0)
       expect(command.verified).toBe(false)
-      expect(command.verificationStatus).toBe('pending-guest-manifest')
-      expect(command.verificationNote).toMatch(/不得据此宣称命令已经安装/)
     }
   })
 })
 
-describe('starter curriculum', () => {
-  it('contains exactly five lessons in the intended sequence', () => {
-    expect(courseLessons).toHaveLength(5)
-    expect(courseLessons.map(({ id }) => id)).toEqual([
-      'linux-basics-01',
-      'filesystem-01',
-      'text-pipelines-01',
-      'permissions-processes-01',
-      'embedded-rootfs-01',
-    ])
+describe('Linux learning path', () => {
+  it('starts with Linux and distributions, then reaches enterprise embedded delivery', () => {
+    expect(courseLessons).toHaveLength(10)
+    expect(courseLessons[0].id).toBe('linux-overview')
+    expect(courseLessons[1].id).toBe('distributions')
+    expect(courseLessons.at(-1)?.id).toBe('embedded-enterprise')
   })
 
-  it('gives every lesson four or five executable lab steps', () => {
-    expect(courseLessons.map(({ labSteps }) => labSteps.length)).toEqual([
-      4, 4, 5, 4, 5,
-    ])
-
+  it('gives every lesson concepts, outcomes and completable learning tasks', () => {
     for (const lesson of courseLessons) {
-      expect(lesson.labSteps.length).toBeGreaterThanOrEqual(4)
-      expect(lesson.labSteps.length).toBeLessThanOrEqual(5)
-      for (const step of lesson.labSteps) {
-        expect(step.commands.length).toBeGreaterThan(0)
-        expect(step.expectedObservation).not.toHaveLength(0)
-      }
+      expect(lesson.objectives.length).toBeGreaterThanOrEqual(3)
+      expect(lesson.concepts.length).toBeGreaterThanOrEqual(3)
+      expect(lesson.labSteps.length).toBeGreaterThanOrEqual(3)
+      for (const step of lesson.labSteps) expect(step.expectedObservation.length).toBeGreaterThan(8)
     }
   })
 })

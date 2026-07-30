@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-31",
+  "runtime": {
+    "name": "v86",
+    "version": "0.5.424",
+    "architecture": "i686",
+    "supports64BitGuests": false
+  },
+  "distributions": [
+    {
+      "id": "buildroot",
+      "name": "Buildroot Core",
+      "version": "technical-probe",
+      "architecture": "i686",
+      "status": "bootable",
+      "purpose": "快速启动、Shell 与嵌入式基础练习",
+      "manifest": "/assets-manifest.json"
+    },
+    {
+      "id": "debian",
+      "name": "Debian",
+      "version": "12 Bookworm",
+      "architecture": "i386",
+      "status": "build-pipeline-required",
+      "purpose": "apt、GNU 用户空间、服务器与服务管理课程",
+      "officialInstaller": "https://www.debian.org/releases/bookworm/debian-installer/",
+      "reason": "Debian 12 是仍提供官方 i386 安装器、可与当前 32 位 v86 路线兼容的版本；正式上线前仍需构建轻量磁盘并完成浏览器启动验证。"
+    },
+    {
+      "id": "ubuntu",
+      "name": "Ubuntu",
+      "version": "current LTS curriculum",
+      "architecture": "amd64",
+      "status": "curriculum-only",
+      "purpose": "Ubuntu 软件管理、服务与企业生态知识",
+      "reason": "现代受支持 Ubuntu 以 64 位为主，而当前 v86 不支持 x86-64；网站保留完整课程，但不会用过期系统冒充现代 Ubuntu。"
+    }
+  ]
+}

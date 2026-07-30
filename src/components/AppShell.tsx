@@ -91,7 +91,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="main-content">{children}</main>
       <footer className="footer">
         <span>Kernel Lab · 浏览器内 Linux 学习环境</span>
-        <span>命令在本机来宾系统中执行，不上传终端内容</span>
+        <span>命令在浏览器内 Linux 环境执行，不上传终端内容</span>
       </footer>
     </div>
   )

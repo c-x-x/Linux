@@ -50,8 +50,8 @@ export function TerminalPane({ onPhaseChange }: TerminalPaneProps) {
       cursorStyle: 'block',
       fontFamily:
         "'SFMono-Regular', 'Cascadia Code', 'Roboto Mono', 'Noto Sans Mono CJK SC', monospace",
-      fontSize: 14,
-      lineHeight: 1.25,
+      fontSize: 16,
+      lineHeight: 1.35,
       scrollback: 8_000,
       theme: {
         background: '#090c0b',
@@ -307,7 +307,7 @@ export function TerminalPane({ onPhaseChange }: TerminalPaneProps) {
       </div>
       <footer className="terminal-card__footer">
         <span>输入与输出：浏览器 ↔ v86 串口 ↔ Linux TTY</span>
-        <span>v86 {VM_VERSION} · i686 · 64 MB RAM · 来宾联网未配置</span>
+        <span>v86 {VM_VERSION} · i686 · 64 MB RAM · 练习环境联网未配置</span>
       </footer>
     </section>
   )

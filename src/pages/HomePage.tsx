@@ -38,7 +38,7 @@ export default function HomePage() {
         </h1>
         <p className="hero__lead">
           从磁盘、rootfs 与启动流程开始，进入浏览器内真正运行的 Linux
-          命令行。每条输出都来自来宾系统，不靠前端伪造。
+          命令行。每条输出都来自浏览器内运行的 Linux，不靠前端伪造。
         </p>
         <div className="hero__actions">
           <Link className="button button--primary" to="/install">
@@ -74,7 +74,7 @@ export default function HomePage() {
               {'\n'}
               <span className="term-path">~</span>% uname -a
               {'\n'}
-              <span className="term-muted">[由来宾 Linux 返回真实结果]</span>
+              <span className="term-muted">[由浏览器内 Linux 返回真实结果]</span>
               {'\n'}
               <span className="term-path">~</span>% <span className="term-cursor" />
             </code>
@@ -181,7 +181,7 @@ export default function HomePage() {
           <article>
             <ShieldCheck size={22} />
             <h3>边界诚实</h3>
-            <p>x86 来宾不等于 ARM 真实硬件</p>
+            <p>浏览器 x86 环境不等于 ARM 真实硬件</p>
           </article>
         </div>
       </section>

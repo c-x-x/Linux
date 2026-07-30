@@ -18,7 +18,7 @@ describe('HomePage', () => {
       screen.getByRole('heading', { level: 1, name: /把 Linux 拆开/ }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/每条输出都来自来宾系统，不靠前端伪造/),
+      screen.getByText(/每条输出都来自浏览器内运行的 Linux，不靠前端伪造/),
     ).toBeInTheDocument()
     expect(screen.getByText('尚未安装')).toBeInTheDocument()
 

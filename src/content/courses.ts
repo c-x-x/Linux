@@ -1,9 +1,9 @@
 export type LessonLevel = '入门' | '基础' | '进阶';
 
 export type LessonMode =
-  | 'real-guest-lab'
-  | 'concept-demonstration'
-  | 'hardware-extension';
+  | 'guided-learning'
+  | 'terminal-practice'
+  | 'embedded-extension';
 
 export type CourseLabStep = {
   id: string;
@@ -13,14 +13,6 @@ export type CourseLabStep = {
   expectedObservation: string;
   safetyNote: string | null;
 };
-
-export type CourseLabSteps = readonly [
-  CourseLabStep,
-  CourseLabStep,
-  CourseLabStep,
-  CourseLabStep?,
-  CourseLabStep?,
-];
 
 export type CourseLesson = {
   id: string;
@@ -32,506 +24,152 @@ export type CourseLesson = {
   objectives: readonly string[];
   concepts: readonly string[];
   commands: readonly string[];
-  labSteps: CourseLabSteps;
-  expectedObservations: readonly string[];
-  checkCommand: string;
-  resetCommand: string;
+  labSteps: readonly CourseLabStep[];
   hardwareLimitations: readonly string[];
 };
 
 export const courseLessons = [
   {
-    id: 'linux-basics-01',
-    title: '认识来宾 Linux、Shell 与路径',
-    summary:
-      '从当前目录、文件系统入口和内核信息开始，建立“浏览器宿主—v86 虚拟机—Linux 来宾—Shell”四层认知。',
-    level: '入门',
-    durationMinutes: 30,
-    mode: 'real-guest-lab',
-    objectives: [
-      '分清网站界面、终端模拟器、Bash 和 Linux 内核各自负责什么。',
-      '使用绝对路径和相对路径在文件系统中定位。',
-      '读取来宾内核、架构和发行版信息，并避免把它误认为宿主或目标板信息。',
-      '识别 /bin/sh 是符号链接、脚本还是 ELF 可执行文件。',
-    ],
-    concepts: [
-      '终端负责字符输入输出，Shell 解析命令，内核提供进程、文件和设备等系统能力。',
-      '当前工作目录是相对路径的解析起点；以 / 开头的是绝对路径。',
-      'uname 报告当前正在运行的来宾内核与机器架构，不报告浏览器所在电脑。',
-      '符号链接保存目标路径；file -L 会跟随链接识别最终目标。',
-    ],
-    commands: ['pwd', 'ls', 'cd', 'uname', 'file'],
+    id: 'linux-overview',
+    title: 'Linux 是什么，企业为什么使用它',
+    summary: '先建立全局认识：Linux 内核、GNU/用户空间、发行版以及服务器、云平台和嵌入式设备之间是什么关系。',
+    level: '入门', durationMinutes: 25, mode: 'guided-learning',
+    objectives: ['说清 Linux 内核与 Linux 发行版的区别。', '了解 Linux 在服务器、云、容器、网络设备与嵌入式产品中的角色。', '理解开源许可证、社区生态和商业支持各自解决什么问题。'],
+    concepts: ['Linux 严格来说是内核；日常所说的 Linux 系统还包含 Shell、工具链、库、服务与软件包。', '企业选择 Linux，通常看重可自动化、可裁剪、生态成熟、长期支持和可观察性。', '服务器发行版强调稳定与生命周期；嵌入式系统更强调体积、启动速度、硬件适配和可维护升级。'],
+    commands: ['uname', 'cat', 'uptime'],
     labSteps: [
-      {
-        id: 'prepare-workspace',
-        title: '进入课程目录',
-        instruction:
-          '创建本课独立目录并进入其中。之后始终先用 pwd 核对位置，避免在错误目录操作。',
-        commands: [
-          'mkdir -p /home/student/labs/linux-basics-01',
-          'cd /home/student/labs/linux-basics-01',
-          'pwd',
-        ],
-        expectedObservation:
-          'pwd 应输出 /home/student/labs/linux-basics-01；这是来宾文件系统内的路径。',
-        safetyNote: null,
-      },
-      {
-        id: 'inspect-hierarchy',
-        title: '观察文件系统层次',
-        instruction:
-          '分别查看根目录、学习用户主目录和实验目录自身的元数据，留意 d 开头的文件类型位。',
-        commands: ['ls -ld / /home /home/student /home/student/labs', 'ls -la /'],
-        expectedObservation:
-          'ls -ld 不会展开目录内容；根目录下能看到 bin、etc、home、proc、tmp 等 Linux 常见入口，具体布局以来宾镜像为准。',
-        safetyNote: null,
-      },
-      {
-        id: 'identify-guest',
-        title: '确认内核与架构',
-        instruction:
-          '读取完整内核信息，再只读取机器架构。记录结果中的 x86 标识，并思考它与 ARM 目标板的区别。',
-        commands: ['uname -a', 'uname -m', 'cat /etc/os-release'],
-        expectedObservation:
-          '输出应来自 v86 来宾，通常显示 32 位 x86 架构；发行版信息来自 /etc/os-release。最终值必须以来宾真实输出为准。',
-        safetyNote: null,
-      },
-      {
-        id: 'inspect-shell',
-        title: '识别 Shell 文件',
-        instruction:
-          '先查看 /bin/sh 目录项，再分别识别链接自身与链接目标的文件类型。',
-        commands: ['ls -l /bin/sh', 'file /bin/sh', 'file -L /bin/sh'],
-        expectedObservation:
-          '/bin/sh 可能是符号链接；file -L 应继续检查它最终指向的脚本或 ELF 程序。具体目标由镜像决定。',
-        safetyNote: null,
-      },
+      { id: 'map-stack', title: '认识系统组成', instruction: '阅读概念卡片，按“硬件—内核—系统工具—应用”顺序理解 Linux 软件栈。', commands: [], expectedObservation: '应用通过系统调用使用内核能力，Shell 只是操作系统的一种入口。', safetyNote: null },
+      { id: 'inspect-system', title: '查看当前练习环境', instruction: '启动终端后读取内核、架构和发行版标识。', commands: ['uname -a', 'cat /etc/os-release'], expectedObservation: '输出由浏览器内运行的 Linux 返回；它用于练习命令，不代表你的电脑或目标开发板。', safetyNote: null },
+      { id: 'enterprise-map', title: '建立企业应用地图', instruction: '把服务器、容器、CI/CD、边缘网关和嵌入式设备分别对应到你熟悉的业务场景。', commands: ['uptime'], expectedObservation: '同一个 Linux 基础能力会以不同发行版和交付方式进入不同业务场景。', safetyNote: null },
     ],
-    expectedObservations: [
-      '所有命令都在来宾 Linux 内执行，路径和内核信息不是 JavaScript 预置文本。',
-      '相对路径随 cd 改变，绝对路径始终从 / 开始解析。',
-      'uname -m 显示的是 v86 来宾架构，而不是未来要部署程序的 ARM 架构。',
-    ],
-    checkCommand: 'lab-check linux-basics-01',
-    resetCommand: 'lab-reset linux-basics-01',
-    hardwareLimitations: [
-      '本课不需要外部硬件，可在浏览器内真实完成。',
-      'v86 V1 是 32 位 x86 来宾；uname 的结果不能代表 ARM、RISC-V 或具体 SoC。',
-    ],
+    hardwareLimitations: ['本课侧重概念；浏览器练习环境不是生产服务器或真实开发板。'],
   },
   {
-    id: 'filesystem-01',
-    title: '文件、目录与链接的真实行为',
-    summary:
-      '在隔离实验目录中创建、复制、重命名、链接和删除文件，观察 inode、符号链接与覆盖风险。',
-    level: '入门',
-    durationMinutes: 40,
-    mode: 'real-guest-lab',
-    objectives: [
-      '安全地创建目录和空文件，并理解 -p 的作用。',
-      '区分复制与移动，以及操作同名目标时的覆盖风险。',
-      '通过 inode 号区分普通副本、硬链接和符号链接。',
-      '使用交互确认删除实验文件，理解 Linux 通常没有命令行回收站。',
-    ],
-    concepts: [
-      '目录保存“名字到 inode”的映射，文件名本身不是文件内容。',
-      '硬链接共享同一 inode；符号链接是保存目标路径的独立文件。',
-      'cp 产生独立副本，mv 在同一文件系统中通常只是改变目录项。',
-      'rm 删除目录项；当最后一个硬链接被删除且文件未被进程打开时，空间才可回收。',
-    ],
-    commands: ['mkdir', 'touch', 'cp', 'mv', 'ln', 'ls', 'file', 'rm'],
+    id: 'distributions',
+    title: '发行版地图：Ubuntu、Debian 与嵌入式方案',
+    summary: '理解发行版不是“不同的 Linux 命令”，而是围绕内核组织的软件仓库、安装器、默认配置、发布节奏和支持策略。',
+    level: '入门', durationMinutes: 30, mode: 'guided-learning',
+    objectives: ['区分 Debian、Ubuntu、RHEL 系、Alpine、Buildroot 和 Yocto 的定位。', '根据生命周期、架构、软件仓库和团队能力选择方案。', '知道开发环境与最终嵌入式 rootfs 可以使用不同方案。'],
+    concepts: ['Debian 重视稳定与多架构；Ubuntu 在其基础上提供固定发布节奏和商业生态。', 'Buildroot 与 Yocto 更像生成嵌入式系统的构建体系，不等同于通用桌面发行版。', '企业选型要记录版本生命周期、安全更新、芯片 BSP、包格式、许可证和回滚策略。'],
+    commands: ['cat', 'uname', 'dpkg', 'apt'],
     labSteps: [
-      {
-        id: 'create-layout',
-        title: '创建安全沙箱',
-        instruction:
-          '所有写操作限定在本课目录。创建两级目录和一个空文件，然后查看详细列表。',
-        commands: [
-          'mkdir -p /home/student/labs/filesystem-01/demo/archive',
-          'cd /home/student/labs/filesystem-01',
-          'touch demo/original.txt',
-          'ls -la demo',
-        ],
-        expectedObservation:
-          'original.txt 的初始大小为 0；archive 是目录。再次执行 mkdir -p 不应因目录已存在而失败。',
-        safetyNote: '不要把实验路径替换成 /、/etc 或其他系统目录。',
-      },
-      {
-        id: 'copy-and-move',
-        title: '比较复制与移动',
-        instruction:
-          '复制原文件，再把副本移动到 archive 中并改名；用 inode 号确认原文件与副本彼此独立。',
-        commands: [
-          'cp demo/original.txt demo/copy.txt',
-          'mv demo/copy.txt demo/archive/moved.txt',
-          'ls -li demo/original.txt demo/archive/moved.txt',
-        ],
-        expectedObservation:
-          '两个普通文件应显示不同 inode；demo/copy.txt 已不存在，内容位于 archive/moved.txt。',
-        safetyNote: '生产环境移动前应使用 mv -i 或先检查目标是否存在。',
-      },
-      {
-        id: 'compare-links',
-        title: '创建两类链接',
-        instruction:
-          '为 original.txt 分别创建硬链接和相对符号链接，再查看 inode 与文件类型。',
-        commands: [
-          'ln demo/original.txt demo/hard-link.txt',
-          'ln -s original.txt demo/symbolic-link.txt',
-          'ls -li demo/original.txt demo/hard-link.txt demo/symbolic-link.txt',
-          'file demo/symbolic-link.txt',
-        ],
-        expectedObservation:
-          '硬链接与原文件 inode 相同且链接计数增加；符号链接有自己的 inode，并显示目标路径 original.txt。',
-        safetyNote: null,
-      },
-      {
-        id: 'remove-copy',
-        title: '受控删除',
-        instruction:
-          '只删除本课 archive 中的 moved.txt。rm -i 会显示确认提示，输入 y 后再检查目录。',
-        commands: ['rm -i demo/archive/moved.txt', 'ls -la demo/archive'],
-        expectedObservation:
-          '确认后 moved.txt 从目录中消失；original.txt 以及它的两个链接不受影响。',
-        safetyNote:
-          'rm 通常无法撤销；不要使用 rm -rf，也不要离开 /home/student/labs/filesystem-01。',
-      },
+      { id: 'identify-release', title: '识别发行版', instruction: '读取标准发行版信息文件和内核架构。', commands: ['cat /etc/os-release', 'uname -m'], expectedObservation: '不同环境的 ID、VERSION_ID 和架构可能不同，脚本不应只依赖欢迎语。', safetyNote: null },
+      { id: 'compare-families', title: '比较发行版家族', instruction: '对比 Debian/Ubuntu 的 deb+apt、RHEL 系的 rpm+dnf，以及 Alpine 的 apk。', commands: ['command -v apt || true', 'command -v apk || true'], expectedObservation: '某个包管理器不存在是正常的发行版差异，不代表 Linux 损坏。', safetyNote: null },
+      { id: 'choose-target', title: '完成选型清单', instruction: '为“云服务器”和“ARM 网关”分别记录架构、支持周期、更新方式和镜像体积要求。', commands: [], expectedObservation: '选型从约束出发，而不是只按熟悉程度或界面选择。', safetyNote: null },
     ],
-    expectedObservations: [
-      '副本拥有不同 inode，硬链接共享 inode，符号链接保存目标路径。',
-      '移动后旧路径消失，新路径出现；同文件系统移动通常不复制文件内容。',
-      '删除副本不会删除原文件；删除某一个硬链接也不会立即删除其他名字所指向的数据。',
-    ],
-    checkCommand: 'lab-check filesystem-01',
-    resetCommand: 'lab-reset filesystem-01',
-    hardwareLimitations: [
-      '本课使用来宾虚拟磁盘，文件系统语义是真实 Linux 行为。',
-      '闪存擦写、UBI/UBIFS、掉电一致性和 NAND 坏块行为需要专用镜像或真实硬件，本课不模拟这些结果。',
-    ],
+    hardwareLimitations: ['当前可运行环境是轻量 Buildroot；Debian 12 i386 镜像接入中，现代 Ubuntu 需要后续 64 位虚拟化路线。'],
   },
   {
-    id: 'text-pipelines-01',
-    title: '标准流、管道与文本处理',
-    summary:
-      '用一份可重复生成的传感器样例数据练习查看、筛选、分列、排序、聚合和参数传递。',
-    level: '基础',
-    durationMinutes: 50,
-    mode: 'real-guest-lab',
-    objectives: [
-      '理解标准输入、标准输出、标准错误以及管道的数据流向。',
-      '组合 grep、cut、sort、uniq 和 wc 得到可核验的结果。',
-      '用 sed 做非破坏性变换，用 awk 做字段计算。',
-      '用 NUL 分隔方式安全地把文件名交给 xargs。',
-    ],
-    concepts: [
-      '管道把左侧进程的标准输出连接到右侧进程的标准输入，各程序仍是真实独立进程。',
-      '> 会在命令执行前截断目标文件，>> 才是追加；错误流默认不会进入普通管道。',
-      'grep 无匹配时返回 1，并不等同于程序故障；返回 2 才表示错误。',
-      '文本排序受 locale 影响；需要可重复构建时常使用 LC_ALL=C。',
-      'xargs 默认按空白拆分，任意文件名应采用 find -print0 与 xargs -0。',
-    ],
-    commands: [
-      'cat',
-      'head',
-      'tail',
-      'grep',
-      'cut',
-      'sort',
-      'uniq',
-      'wc',
-      'sed',
-      'awk',
-      'find',
-      'xargs',
-    ],
+    id: 'installation-planning',
+    title: '安装规划：启动、分区、文件系统与网络',
+    summary: '在安装页面完成一套可解释的方案，理解固件、引导器、内核、根文件系统、Swap、DHCP 和静态地址的作用。',
+    level: '入门', durationMinutes: 40, mode: 'guided-learning',
+    objectives: ['描述从上电到用户空间启动的主要阶段。', '理解磁盘、分区、文件系统与挂载点的区别。', '为 DHCP 或静态网络填写完整参数并识别风险。'],
+    concepts: ['磁盘是设备，分区是范围，文件系统组织数据，挂载点把它接入目录树。', 'UEFI/BIOS、引导器、内核和 init 系统依次承担不同职责。', '静态网络至少需要地址与前缀、网关、DNS；地址冲突会导致间歇性故障。'],
+    commands: ['lsblk', 'blkid', 'df', 'mount', 'ip'],
     labSteps: [
-      {
-        id: 'create-dataset',
-        title: '生成固定样例',
-        instruction:
-          '在本课目录生成五行 CSV 数据。printf 是 Bash 可用工具，这里的重定向会新建或覆盖 readings.csv。',
-        commands: [
-          'mkdir -p /home/student/labs/text-pipelines-01',
-          'cd /home/student/labs/text-pipelines-01',
-          "printf '%s\\n' 'sensor,temp,status' 'cpu,42,ok' 'wifi,55,warn' 'cpu,44,ok' 'display,39,ok' > readings.csv",
-          'wc -l readings.csv',
-        ],
-        expectedObservation:
-          'wc -l 应报告 5 行；第一行是表头，其余四行是样例记录。',
-        safetyNote: '> 会覆盖同名文件，因此本步骤只在课程专属目录执行。',
-      },
-      {
-        id: 'inspect-and-filter',
-        title: '查看并筛选记录',
-        instruction:
-          '比较完整输出、头尾输出和正则筛选；记录 grep 输出前的行号。',
-        commands: [
-          'cat readings.csv',
-          'head -n 2 readings.csv',
-          'tail -n 2 readings.csv',
-          "grep -n ',ok$' readings.csv",
-        ],
-        expectedObservation:
-          'grep 应匹配第 2、4、5 行；warn 记录和表头不以 ,ok 结尾，因此不会出现。',
-        safetyNote: null,
-      },
-      {
-        id: 'aggregate-status',
-        title: '组成统计管道',
-        instruction:
-          '抽取状态列、跳过表头、排序相同值、统计相邻重复行，再按数量倒序显示。',
-        commands: [
-          'cut -d, -f3 readings.csv | tail -n +2 | sort | uniq -c | sort -nr',
-        ],
-        expectedObservation:
-          '结果应显示 ok 为 3 次、warn 为 1 次；每一级命令只完成一个明确转换。',
-        safetyNote: null,
-      },
-      {
-        id: 'transform-and-calculate',
-        title: '变换并计算字段',
-        instruction:
-          '先用 sed 只打印数据行，再由 awk 对温度列求平均值；两条命令都不修改源文件。',
-        commands: [
-          "sed -n '2,5p' readings.csv",
-          "awk -F, 'NR > 1 {sum += $2; count++} END {printf \"%.1f\\n\", sum / count}' readings.csv",
-        ],
-        expectedObservation:
-          'sed 输出四条数据；awk 应输出平均温度 45.0。',
-        safetyNote: '本课不使用 sed -i，避免直接修改唯一的数据副本。',
-      },
-      {
-        id: 'safe-xargs',
-        title: '安全传递文件名',
-        instruction:
-          '创建带空格的文件名，并使用 NUL 分隔查找结果，确保 xargs 不会错误拆词。',
-        commands: [
-          "touch 'board one.log' 'board two.log'",
-          "find . -maxdepth 1 -type f -name 'board *.log' -print0 | sort -z | xargs -0 -n1 file",
-        ],
-        expectedObservation:
-          'file 应收到两个完整路径；文件名中的空格不会导致额外参数。',
-        safetyNote: '把 xargs 与 rm、chmod 等修改型命令组合前，应先替换成 printf 检查参数边界。',
-      },
+      { id: 'open-installer', title: '建立安装方案', instruction: '打开“安装系统”，选择发行版并查看镜像状态、目标磁盘和保留空间。', commands: [], expectedObservation: '网页只操作浏览器虚拟磁盘，不会扫描或改写电脑真实磁盘。', safetyNote: null },
+      { id: 'plan-storage', title: '规划存储', instruction: '比较引导、根分区、数据分区和 Swap 的用途，再核对容量总和。', commands: ['df -h', 'mount'], expectedObservation: '运行环境中的挂载结果和安装规划是两类信息；规划不会伪装成已经写盘。', safetyNote: '真实设备分区前必须确认设备名并备份数据。' },
+      { id: 'plan-network', title: '配置网络', instruction: '先选 DHCP；再练习填写一个不提交的静态地址方案，确保地址、前缀、网关和 DNS 完整。', commands: ['ip address show', 'ip route show'], expectedObservation: 'DHCP 自动协商参数；静态方案依赖所在网络，示例值不能直接照搬到生产环境。', safetyNote: null },
     ],
-    expectedObservations: [
-      '管道中的结果来自真实工具计算，而不是网站预置返回文本。',
-      '样例数据的状态统计为 ok=3、warn=1，平均温度为 45.0。',
-      'NUL 分隔能完整保留含空格的文件名。',
-    ],
-    checkCommand: 'lab-check text-pipelines-01',
-    resetCommand: 'lab-reset text-pipelines-01',
-    hardwareLimitations: [
-      '本课不需要外部硬件，样例数据是明确标注的教学数据。',
-      '样例不是从真实温度传感器采集；连接 I²C、SPI 或 ADC 设备需要支持对应控制器的开发板。',
-    ],
+    hardwareLimitations: ['安装页面是教学流程；只有标记为“可启动”的镜像才会真正进入 Linux。'],
   },
   {
-    id: 'permissions-processes-01',
-    title: '权限、进程、作业与信号',
-    summary:
-      '以普通学习用户创建脚本和后台任务，观察权限位、PID、作业号、真实信号与权限拒绝。',
-    level: '基础',
-    durationMinutes: 45,
-    mode: 'real-guest-lab',
-    objectives: [
-      '读懂 rwx 权限位并用符号模式做最小权限变更。',
-      '区分 Shell 作业号与内核 PID，使用 ps 查看进程快照。',
-      '先用 SIGTERM 请求正常退出，并理解 SIGKILL 的代价。',
-      '观察普通用户执行 chown 时的真实权限错误，不把失败伪装成成功。',
-    ],
-    concepts: [
-      '权限分为属主、属组和其他用户三组；目录的执行位控制路径穿越。',
-      '进程由内核用 PID 标识；jobs 只显示当前交互式 Shell 创建的作业。',
-      '信号是异步通知机制；SIGTERM 可被处理，SIGKILL 不能被捕获或忽略。',
-      '最小权限原则要求默认使用普通用户，只在理由明确时临时提升权限。',
-    ],
-    commands: ['touch', 'chmod', 'ls', 'ps', 'jobs', 'kill', 'chown'],
+    id: 'shell-foundations',
+    title: 'Shell、路径、帮助与 Tab 补全',
+    summary: '从提示符、参数、路径和退出码开始，掌握不会迷路的命令行基本功。',
+    level: '入门', durationMinutes: 45, mode: 'terminal-practice',
+    objectives: ['读懂命令、选项、参数和提示符。', '使用绝对与相对路径移动并通过 Tab 补全。', '通过 --help、命令库和退出码自行排查问题。'],
+    concepts: ['Shell 负责解析命令行并启动程序；终端负责输入输出显示。', '以 / 开头的是绝对路径，. 与 .. 分别表示当前目录和上级目录。', 'Tab 补全由 Shell 根据当前环境生成；命令成功通常返回 0，失败返回非 0。'],
+    commands: ['pwd', 'ls', 'cd', 'echo', 'which', 'history'],
     labSteps: [
-      {
-        id: 'prepare-script',
-        title: '创建并授权脚本',
-        instruction:
-          '创建一个简单脚本，先查看默认权限，再只为属主增加执行位。',
-        commands: [
-          'mkdir -p /home/student/labs/permissions-processes-01',
-          'cd /home/student/labs/permissions-processes-01',
-          "printf '#!/bin/sh\\nprintf \\\"worker ready\\\\n\\\"\\n' > worker.sh",
-          'ls -l worker.sh',
-          'chmod u+x worker.sh',
-          'ls -l worker.sh',
-        ],
-        expectedObservation:
-          '第二次 ls 应比第一次多出属主执行位 x，组和其他用户权限不应被无意扩大。',
-        safetyNote: '不要用 chmod 777 代替理解具体权限需求。',
-      },
-      {
-        id: 'start-background-job',
-        title: '启动后台作业',
-        instruction:
-          '在当前 Shell 启动 sleep，把特殊参数 $! 保存的最近后台 PID 记录到变量，再比较 jobs 与 ps。',
-        commands: [
-          'sleep 120 & worker_pid=$!',
-          'jobs -l',
-          'ps -o pid,ppid,stat,comm -p "$worker_pid"',
-        ],
-        expectedObservation:
-          'jobs 显示作业号和 PID；ps 中 PID 应与 worker_pid 相同，PPID 通常是当前 Shell。',
-        safetyNote: null,
-      },
-      {
-        id: 'send-term',
-        title: '发送可处理的终止信号',
-        instruction:
-          '向刚才的后台进程发送 SIGTERM，等待 Shell 更新作业状态，再检查该 PID。',
-        commands: [
-          'kill -TERM "$worker_pid"',
-          'wait "$worker_pid"; printf \'exit=%s\\n\' "$?"',
-          'jobs -l',
-          'ps -p "$worker_pid"',
-        ],
-        expectedObservation:
-          'wait 应报告任务由信号结束的非零状态；jobs 不再列出运行中的任务，ps 通常找不到该 PID。',
-        safetyNote: '只向本课创建并记录的 PID 发信号，不要猜测系统进程 PID。',
-      },
-      {
-        id: 'observe-chown-denial',
-        title: '观察权限拒绝',
-        instruction:
-          '普通用户尝试把自己的实验文件交给 root。此步骤预期失败，用退出码确认错误是真实发生的。',
-        commands: [
-          'touch owned.txt',
-          'chown 0:0 owned.txt',
-          "printf 'chown exit=%s\\n' \"$?\"",
-          'ls -ln owned.txt',
-        ],
-        expectedObservation:
-          'chown 应在标准错误输出 Operation not permitted 或等价信息并返回非零；文件属主仍是学习用户。',
-        safetyNote:
-          '不要用 sudo 绕过这一教学结果；对系统目录递归 chown 可能破坏整个虚拟系统。',
-      },
-    ],
-    expectedObservations: [
-      'chmod 可以精确改变某一组权限位，无需把文件设为 777。',
-      '作业号属于当前 Shell，PID 属于内核进程，两者用途不同。',
-      '普通用户 chown 失败是预期的真实安全边界，网站不会替换或隐藏错误输出。',
-    ],
-    checkCommand: 'lab-check permissions-processes-01',
-    resetCommand: 'lab-reset permissions-processes-01',
-    hardwareLimitations: [
-      '进程、权限与信号实验在来宾内是真实 Linux 行为，不需要开发板。',
-      'v86 的调度时序和性能不等同于实时嵌入式目标，不能据此评估实时延迟或优先级反转。',
-    ],
+      { id: 'navigate', title: '定位与移动', instruction: '每次移动前后都用 pwd 核对位置，并输入 /e 后按 Tab 尝试补全。', commands: ['pwd', 'ls /', 'cd /tmp', 'pwd'], expectedObservation: 'cd 改变 Shell 工作目录，pwd 显示新位置；Tab 补全来自实际文件系统。', safetyNote: null },
+      { id: 'arguments-help', title: '理解参数与帮助', instruction: '比较不带参数和带参数的输出，并打开内置帮助。', commands: ['uname', 'uname -a', 'ls --help'], expectedObservation: '选项会改变程序行为；不同实现的帮助文本可能不同。', safetyNote: null },
+      { id: 'exit-status', title: '观察退出状态', instruction: '执行成功和失败的路径查询，并立即读取 $?。', commands: ['ls /tmp; echo $?', 'ls /definitely-missing; echo $?'], expectedObservation: '成功通常为 0，不存在的路径会输出真实错误并返回非 0。', safetyNote: null },
+    ], hardwareLimitations: ['练习环境提供真实 Shell 行为，但可用命令取决于所选发行版。'],
   },
   {
-    id: 'embedded-rootfs-01',
-    title: '构造最小 rootfs 骨架',
-    summary:
-      '创建符合 Linux 常见层次的根文件系统骨架，加入 BusyBox、链接和配置文件，并检查元数据与归档内容。',
-    level: '进阶',
-    durationMinutes: 60,
-    mode: 'real-guest-lab',
-    objectives: [
-      '解释嵌入式启动链中内核与 rootfs 的不同职责。',
-      '创建 bin、etc、proc、sys、dev、tmp 等最小目录骨架。',
-      '识别 BusyBox 可执行文件的真实架构，并用符号链接提供 applet 入口。',
-      '以保留权限和链接的方式打包 rootfs，并在解包前检查归档清单。',
-      '明确一个目录骨架距离可启动目标系统还缺少什么。',
-    ],
-    concepts: [
-      '内核挂载根文件系统后启动 init；只有目录结构而没有有效 init 的 rootfs 不能完成用户空间启动。',
-      'BusyBox 用一个二进制提供许多 applet，常通过符号链接或 busybox 命令分派。',
-      '/proc 与 /sys 是运行时由内核提供的虚拟文件系统，不能靠预填普通文件替代。',
-      '/dev 通常由 devtmpfs 或设备管理器填充；设备节点关联内核驱动，不是同名文本文件。',
-      '归档中的权限、属主、链接和路径都属于 rootfs 接口的一部分。',
-    ],
-    commands: ['mkdir', 'cp', 'ln', 'chmod', 'find', 'file', 'ls', 'tar', 'uname'],
+    id: 'files-permissions',
+    title: '文件、目录、链接与权限',
+    summary: '在 /tmp 安全目录中练习创建、复制、移动、链接和权限判断。',
+    level: '基础', durationMinutes: 50, mode: 'terminal-practice',
+    objectives: ['区分普通文件、目录、硬链接和符号链接。', '读懂 rwx 权限和用户/组身份。', '安全使用复制、移动和删除命令。'],
+    concepts: ['目录保存名字到 inode 的映射；符号链接保存目标路径。', '权限分为所有者、所属组和其他用户三组。', 'rm 通常没有回收站，递归和通配符会放大风险。'],
+    commands: ['mkdir', 'touch', 'cp', 'mv', 'ln', 'ls', 'chmod', 'id', 'rm'],
     labSteps: [
-      {
-        id: 'create-rootfs-layout',
-        title: '创建目录骨架',
-        instruction:
-          '在课程目录创建 rootfs 的常见顶层目录；这里只创建挂载点，不伪造 proc、sys 或设备内容。',
-        commands: [
-          'mkdir -p /home/student/labs/embedded-rootfs-01/rootfs/{bin,etc,proc,sys,dev,tmp,var,usr/bin}',
-          'cd /home/student/labs/embedded-rootfs-01',
-          'chmod 1777 rootfs/tmp',
-          'find rootfs -maxdepth 2 -type d -print | sort',
-        ],
-        expectedObservation:
-          '能看到所有顶层目录；tmp 权限包含 sticky bit。proc、sys、dev 目前应是空挂载点。',
-        safetyNote: '所有操作限定在课程目录；不要尝试修改来宾真实的 /dev、/proc 或 /sys。',
-      },
-      {
-        id: 'install-busybox',
-        title: '加入 BusyBox 与 Shell 入口',
-        instruction:
-          '从来宾 PATH 查找 BusyBox，复制到骨架并创建 /bin/sh 相对符号链接。若找不到 BusyBox，应保留真实失败并报告镜像缺包。',
-        commands: [
-          'busybox_path="$(command -v busybox)"',
-          'test -n "$busybox_path"',
-          'cp "$busybox_path" rootfs/bin/busybox',
-          'ln -s busybox rootfs/bin/sh',
-          'ls -l rootfs/bin',
-        ],
-        expectedObservation:
-          'rootfs/bin/busybox 是独立文件，rootfs/bin/sh 是指向 busybox 的相对符号链接；缺少 BusyBox 时 test 或 cp 应真实失败。',
-        safetyNote:
-          '课程内容不应捕获错误后伪造成功；BusyBox 是否安装最终由来宾 command-manifest.json 验证。',
-      },
-      {
-        id: 'inspect-architecture',
-        title: '核对可执行文件架构',
-        instruction:
-          '识别复制后的 BusyBox，并把它的架构与当前来宾架构对照。',
-        commands: ['file rootfs/bin/busybox', 'uname -m', 'file -L rootfs/bin/sh'],
-        expectedObservation:
-          'BusyBox 应被识别为当前来宾可执行的 ELF，通常是 32 位 x86；它不是 ARM 目标板二进制。',
-        safetyNote: null,
-      },
-      {
-        id: 'write-config',
-        title: '写入最小配置样例',
-        instruction:
-          '创建 passwd 和 hostname 教学样例，然后检查普通文件、目录和符号链接的清单。',
-        commands: [
-          "printf '%s\\n' 'root:x:0:0:root:/root:/bin/sh' > rootfs/etc/passwd",
-          "printf '%s\\n' 'linux-lab' > rootfs/etc/hostname",
-          'find rootfs -maxdepth 3 -printf \'%y %m %p -> %l\\n\' | sort',
-        ],
-        expectedObservation:
-          '清单用 d、f、l 区分目录、普通文件和链接，并显示 tmp 的 1777 权限以及 sh 的链接目标。',
-        safetyNote:
-          '这是教学配置，不包含密码策略、组文件、设备节点、init 脚本或生产安全加固。',
-      },
-      {
-        id: 'archive-rootfs',
-        title: '打包并审计内容',
-        instruction:
-          '从 rootfs 内部创建 gzip 压缩 tar 包，再只查看归档清单，不覆盖任何现有系统路径。',
-        commands: [
-          'tar -czf rootfs.tar.gz -C rootfs .',
-          'file rootfs.tar.gz',
-          'tar -tvf rootfs.tar.gz',
-        ],
-        expectedObservation:
-          '归档成员以 ./ 开头，包含目录、配置文件、BusyBox 和 sh 符号链接；tar -tvf 不会解包。',
-        safetyNote:
-          '永远不要在 / 中直接解开来源不明的 rootfs；先检查绝对路径、.. 路径、属主和链接。',
-      },
-    ],
-    expectedObservations: [
-      '目录骨架与 tar 归档在来宾中真实创建，可由 find、file、ls 和 tar 交叉检查。',
-      'BusyBox 的实际架构匹配 v86 来宾，而不代表 ARM 目标板。',
-      'proc、sys 和 dev 只是空挂载点；rootfs 尚不能因为“看起来完整”就被宣称可启动。',
-    ],
-    checkCommand: 'lab-check embedded-rootfs-01',
-    resetCommand: 'lab-reset embedded-rootfs-01',
-    hardwareLimitations: [
-      'V1 可真实教授目录布局、权限、BusyBox、ELF 识别和归档，但构建物是 32 位 x86 来宾版本。',
-      'ARM/RISC-V 交叉编译、动态链接器和目标 ABI 需要匹配的工具链及 sysroot；未验证前不得宣称可用。',
-      'GPIO、I²C、SPI、MTD/NAND、UBI、设备树与具体驱动的板级效果需要真实硬件或专用系统模拟器。',
-      '本课不会伪造设备节点、内核挂载、init 启动或开发板启动成功。',
-    ],
+      { id: 'sandbox', title: '创建安全沙箱', instruction: '全部写操作限制在 /tmp/linux-learning。', commands: ['mkdir -p /tmp/linux-learning', 'cd /tmp/linux-learning', 'touch original.txt', 'ls -la'], expectedObservation: '目录与空文件被真实创建，刷新虚拟机前可继续使用。', safetyNote: '不要把练习路径替换为 / 或 /etc。' },
+      { id: 'links', title: '比较复制与链接', instruction: '创建副本和符号链接并查看详细信息。', commands: ['cp original.txt copy.txt', 'ln -s original.txt link.txt', 'ls -li'], expectedObservation: '副本是独立文件；符号链接显示目标路径。', safetyNote: null },
+      { id: 'permissions', title: '读取和修改权限', instruction: '查看身份，把文件设为仅所有者可读写，再验证列表。', commands: ['id', 'chmod 600 original.txt', 'ls -l original.txt'], expectedObservation: '权限位应显示为 -rw-------；身份决定内核如何进行访问检查。', safetyNote: null },
+    ], hardwareLimitations: ['虚拟磁盘体现 Linux 文件语义，但不模拟 NAND 坏块、UBI 或掉电一致性。'],
+  },
+  {
+    id: 'text-pipelines',
+    title: '标准流、重定向、管道与文本处理',
+    summary: '把小工具组合成可重复的数据处理流程，这是 Linux 运维与嵌入式诊断的核心能力。',
+    level: '基础', durationMinutes: 50, mode: 'terminal-practice',
+    objectives: ['理解标准输入、输出和错误。', '组合 grep、cut、sort、uniq、wc。', '识别覆盖重定向的风险。'],
+    concepts: ['管道连接两个进程的数据流，不是简单的字符串替换。', '> 覆盖文件，>> 追加；2> 处理标准错误。', '脚本应检查退出码并保留失败信息。'],
+    commands: ['printf', 'cat', 'grep', 'cut', 'sort', 'uniq', 'wc', 'sed', 'awk', 'tee'],
+    labSteps: [
+      { id: 'dataset', title: '生成样例数据', instruction: '创建一份确定的日志样例。', commands: ["printf '%s\\n' 'INFO boot' 'WARN network' 'INFO ready' > /tmp/linux-learning.log", 'cat /tmp/linux-learning.log'], expectedObservation: '文件包含三行，输出来自实际文件内容。', safetyNote: null },
+      { id: 'filter', title: '筛选与计数', instruction: '只保留 INFO 行并统计数量。', commands: ['grep INFO /tmp/linux-learning.log', 'grep INFO /tmp/linux-learning.log | wc -l'], expectedObservation: '筛选得到两行，计数结果为 2。', safetyNote: null },
+      { id: 'redirect', title: '安全保存结果', instruction: '用 tee 同时查看并保存筛选结果。', commands: ['grep WARN /tmp/linux-learning.log | tee /tmp/warnings.log', 'wc -l /tmp/warnings.log'], expectedObservation: '屏幕与文件获得同一行数据。', safetyNote: '> 会覆盖同名文件，生产操作前先确认路径。' },
+    ], hardwareLimitations: ['不同 BusyBox/GNU 工具的选项可能不同，命令库会标注通用语法。'],
+  },
+  {
+    id: 'process-services',
+    title: '进程、资源、服务与日志',
+    summary: '从 PID、信号和资源观察进入 systemd 服务与日志，建立企业故障排查顺序。',
+    level: '基础', durationMinutes: 55, mode: 'terminal-practice',
+    objectives: ['查看进程与资源状态。', '理解 TERM 与 KILL 的差别。', '掌握服务状态—日志—配置—依赖的排查链。'],
+    concepts: ['进程是正在运行的程序实例，PID 是当前启动周期内的标识。', 'SIGTERM 请求程序清理退出，SIGKILL 由内核强制结束且无法捕获。', 'systemd 发行版通常用 systemctl 管理服务、journalctl 查询日志。'],
+    commands: ['ps', 'top', 'free', 'uptime', 'kill', 'systemctl', 'journalctl', 'dmesg'],
+    labSteps: [
+      { id: 'observe', title: '观察系统状态', instruction: '按负载、内存、进程三个层次采集证据。', commands: ['uptime', 'free -h', 'ps'], expectedObservation: '不同镜像工具格式可能不同，但数据都来自当前 Linux。', safetyNote: null },
+      { id: 'signal', title: '安全练习信号', instruction: '只结束自己创建的 sleep 进程。', commands: ['sleep 300 &', 'jobs', 'kill %1'], expectedObservation: '后台作业被 SIGTERM 结束，Shell 会报告状态。', safetyNote: '不要对不认识的系统 PID 使用 kill -9。' },
+      { id: 'service-chain', title: '学习服务排查链', instruction: '在支持 systemd 的 Debian/Ubuntu 中依次查看状态和日志；轻量环境可能明确提示命令不存在。', commands: ['command -v systemctl || true', 'dmesg | tail'], expectedObservation: '工具缺失体现发行版差异；不能把 systemd 命令硬套到所有嵌入式系统。', safetyNote: null },
+    ], hardwareLimitations: ['Buildroot 练习环境未必使用 systemd；相关内容会在 Debian 环境中完整练习。'],
+  },
+  {
+    id: 'network-ssh',
+    title: '网络、DNS、端口、HTTP 与 SSH',
+    summary: '按“接口—地址—路由—DNS—端口—应用协议”逐层定位问题。',
+    level: '基础', durationMinutes: 55, mode: 'terminal-practice',
+    objectives: ['读懂 IP 地址和默认路由。', '区分 DNS、ICMP、TCP 端口与 HTTP。', '理解 SSH 密钥和最小暴露原则。'],
+    concepts: ['能 ping IP 不代表 DNS 或 HTTP 正常；每一层都需要独立证据。', '监听地址 127.0.0.1 与 0.0.0.0 的暴露范围不同。', 'SSH 私钥必须保密，服务端保存公钥；生产环境应限制口令登录。'],
+    commands: ['ip', 'ping', 'ss', 'nslookup', 'curl', 'wget', 'ssh', 'scp'],
+    labSteps: [
+      { id: 'layers', title: '检查接口与路由', instruction: '先确认接口状态、地址和默认路由。', commands: ['ip address show', 'ip route show'], expectedObservation: '若当前练习镜像未开放网络，会如实显示有限接口或缺失命令。', safetyNote: null },
+      { id: 'ports', title: '检查监听端口', instruction: '查看 TCP/UDP 监听状态并关注绑定地址。', commands: ['ss -lntup'], expectedObservation: '列表为空也有意义，说明当前没有相应监听服务。', safetyNote: null },
+      { id: 'diagnostic-order', title: '形成排查顺序', instruction: '记录从本机配置、网关、DNS 到应用请求的逐层检查清单。', commands: ['ping -c 1 127.0.0.1'], expectedObservation: '排查应从近到远，每一步都基于上一层已成立。', safetyNote: '不要对未授权目标进行扫描或压力测试。' },
+    ], hardwareLimitations: ['浏览器网络需要安全代理；当前镜像不承诺公网或局域网访问。'],
+  },
+  {
+    id: 'packages-automation',
+    title: '软件包、服务部署与 Shell 自动化',
+    summary: '理解 Debian/Ubuntu 软件包管理，并把重复操作写成可检查、可失败、可复现的脚本。',
+    level: '进阶', durationMinutes: 60, mode: 'terminal-practice',
+    objectives: ['理解仓库索引、软件包、依赖与签名。', '区分安装软件与启动服务。', '编写包含变量、条件和退出码的基础脚本。'],
+    concepts: ['apt 负责解析仓库和依赖，dpkg 负责底层 deb 包操作。', '安装完成不等于服务已启动，更不等于网络可访问。', '可靠脚本应固定输入、检查失败、避免交互并输出必要日志。'],
+    commands: ['apt', 'dpkg', 'systemctl', 'journalctl', 'export', 'test', 'printf'],
+    labSteps: [
+      { id: 'detect-manager', title: '识别包管理器', instruction: '先检测工具，不直接修改系统。', commands: ['command -v apt || command -v apk || true'], expectedObservation: '结果取决于发行版；Buildroot 通常不提供通用在线包管理器。', safetyNote: null },
+      { id: 'query-packages', title: '只读查询', instruction: '在 Debian/Ubuntu 中查询已安装包；当前环境缺失时保留真实失败。', commands: ['command -v dpkg && dpkg -l | head'], expectedObservation: '查询不会安装软件，输出反映当前镜像实际状态。', safetyNote: null },
+      { id: 'write-script', title: '编写可检查脚本', instruction: '创建一个检查发行版信息的短脚本并执行。', commands: ["printf '%s\\n' '#!/bin/sh' 'test -r /etc/os-release || exit 1' 'grep PRETTY_NAME /etc/os-release' > /tmp/check-os.sh", 'chmod +x /tmp/check-os.sh', '/tmp/check-os.sh'], expectedObservation: '文件存在时输出发行版名称；缺失时通过非零退出码失败。', safetyNote: '不要直接执行来源不明的下载脚本。' },
+    ], hardwareLimitations: ['在线安装依赖联网与可信仓库；当前练习环境主要支持只读理解和脚本基础。'],
+  },
+  {
+    id: 'embedded-enterprise',
+    title: '企业 Linux 与嵌入式交付全流程',
+    summary: '把开发机、交叉编译、Bootloader、内核、设备树、rootfs、OTA、监控和供应链安全串成一条工程链。',
+    level: '进阶', durationMinutes: 65, mode: 'embedded-extension',
+    objectives: ['描述嵌入式 Linux 从源码到设备启动的产物链。', '理解交叉编译与目标架构。', '建立可回滚升级、日志、看门狗和 SBOM 的生产意识。'],
+    concepts: ['主机工具链生成目标架构程序，能编译不代表能在主机直接运行。', '设备树描述不可自动枚举的硬件，驱动把设备能力接入内核子系统。', '企业交付需要可重现构建、签名验证、A/B 更新、回滚、漏洞管理和远程可观察性。'],
+    commands: ['uname', 'file', 'ldd', 'dmesg', 'mount', 'sync', 'reboot'],
+    labSteps: [
+      { id: 'architecture', title: '核对目标架构', instruction: '比较运行架构与 ELF 文件类型，理解为什么程序会出现 Exec format error。', commands: ['uname -m', 'file /bin/sh'], expectedObservation: '内核架构与可执行文件架构必须兼容；浏览器当前是 i686 练习环境。', safetyNote: null },
+      { id: 'boot-chain', title: '绘制启动链', instruction: '按 Boot ROM—Bootloader—内核/设备树—init—应用记录每阶段输入、输出和日志位置。', commands: ['dmesg | head'], expectedObservation: '内核日志只覆盖启动链的一部分，早期引导日志通常来自串口或 Bootloader。', safetyNote: null },
+      { id: 'release-checklist', title: '建立发布清单', instruction: '为一个网关产品列出镜像版本、签名、分区槽、回滚条件、健康检查、日志和许可证清单。', commands: ['sync'], expectedObservation: '可升级、可回滚、可诊断与可审计是生产嵌入式 Linux 的组成部分。', safetyNote: '真实设备升级前必须验证供电、镜像签名和回滚路径。' },
+    ], hardwareLimitations: ['GPIO、I²C、SPI、设备树加载、驱动和 OTA 掉电测试必须在专用模拟器或真实硬件完成。'],
   },
 ] as const satisfies readonly CourseLesson[];

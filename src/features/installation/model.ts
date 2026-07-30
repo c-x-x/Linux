@@ -46,6 +46,13 @@ export interface StoredSnapshot {
   state: ArrayBuffer
 }
 
+export interface CourseProgress {
+  lessonId: string
+  completed: boolean
+  completedSteps: string[]
+  updatedAt: string
+}
+
 interface KernelLabDb extends DBSchema {
   settings: {
     key: string
@@ -57,7 +64,7 @@ interface KernelLabDb extends DBSchema {
   }
   progress: {
     key: string
-    value: { lessonId: string; completed: boolean; updatedAt: string }
+    value: CourseProgress
   }
 }
 
@@ -171,6 +178,24 @@ export async function readSnapshot() {
 
 export async function removeSnapshot() {
   await (await db()).delete('snapshots', 'current')
+}
+
+export async function readCourseProgress(): Promise<CourseProgress[]> {
+  const values = await (await db()).getAll('progress')
+  return values.map((value) => ({
+    lessonId: value.lessonId,
+    completed: Boolean(value.completed),
+    completedSteps: Array.isArray(value.completedSteps) ? value.completedSteps : [],
+    updatedAt: value.updatedAt,
+  }))
+}
+
+export async function writeCourseProgress(progress: CourseProgress) {
+  await (await db()).put('progress', {
+    ...progress,
+    completedSteps: [...progress.completedSteps],
+    updatedAt: new Date().toISOString(),
+  })
 }
 
 export function onInstallationChange(listener: () => void) {

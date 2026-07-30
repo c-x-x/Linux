@@ -35,8 +35,12 @@ export default function CommandsPage() {
       const queryMatches =
         !normalized ||
         command.name.includes(normalized) ||
+        command.category.toLowerCase().includes(normalized) ||
         command.summary.toLowerCase().includes(normalized) ||
-        command.syntax.some((syntax) => syntax.toLowerCase().includes(normalized))
+        command.syntax.some((syntax) => syntax.toLowerCase().includes(normalized)) ||
+        command.examples.some((example) =>
+          `${example.command} ${example.description}`.toLowerCase().includes(normalized),
+        )
       return categoryMatches && queryMatches
     })
   }, [category, query])
@@ -54,21 +58,21 @@ export default function CommandsPage() {
           <span className="section-kicker">COMMAND REFERENCE</span>
           <h1>Linux 命令库</h1>
           <p>
-            首批 30 条高频命令，覆盖文件、文本、权限、进程与归档。示例是学习资料；
-            安装状态最终以来宾镜像清单为准。
+            {commandDocs.length} 条常用命令，覆盖 Shell、文件、文本、用户权限、进程、磁盘、网络、软件包与服务。
+            示例会注明风险，具体选项以所用发行版为准。
           </p>
         </div>
         <div className="page-heading__count">
           <strong>{commandDocs.length}</strong>
-          <span>首批命令</span>
+          <span>已收录命令</span>
         </div>
       </header>
 
       <div className="notice notice--warning command-verification-note">
         <AlertTriangle size={18} />
         <span>
-          当前远程技术探针尚未生成 <code>command-manifest.json</code>，因此所有条目均标记为“待来宾验证”，
-          不把文档存在误写成软件已安装。
+          Linux 发行版和工具实现不同，同一命令的选项可能有差异。命令库说明通用用途；
+          运行前可先使用 <code>command -v 名称</code> 检查当前环境。
         </span>
       </div>
 
@@ -135,7 +139,7 @@ export default function CommandsPage() {
                     {dangerCopy[command.dangerLevel]}
                   </span>
                   <span className="verification-badge">
-                    <AlertTriangle size={13} /> 待验证
+                    <AlertTriangle size={13} /> 环境相关
                   </span>
                   <ChevronDown className="command-card__chevron" size={18} />
                 </button>

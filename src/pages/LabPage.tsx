@@ -20,7 +20,7 @@ const starterCommands = [
   ['uname -a', '查看内核、主机与架构'],
   ['pwd && ls -la', '确认当前位置并列出隐藏文件'],
   ["printf 'a\\nb\\n' | grep b", '体验管道与真实标准输出'],
-  ['cat /proc/cpuinfo | head', '读取来宾内核暴露的 CPU 信息'],
+  ['cat /proc/cpuinfo | head', '读取 Linux 内核暴露的 CPU 信息'],
 ]
 
 export default function LabPage() {
@@ -47,7 +47,7 @@ export default function LabPage() {
         <div>
           <span className="section-kicker">REAL GUEST TERMINAL</span>
           <h1>命令行实验室</h1>
-          <p>前端只转发终端字节；命令、错误和退出码都由来宾 Linux 产生。</p>
+          <p>前端只转发终端字节；命令、错误和退出码都由浏览器内运行的 Linux 产生。</p>
         </div>
         <div className="lab-heading__status">
           <span className={'vm-dot vm-dot--' + phase} />
@@ -174,11 +174,11 @@ export default function LabPage() {
         </article>
         <article>
           <strong>i686</strong>
-          <span>来宾架构</span>
+          <span>练习环境架构</span>
         </article>
         <article>
           <strong>64 MB</strong>
-          <span>来宾内存</span>
+          <span>练习环境内存</span>
         </article>
         <article>
           <strong>LOCAL</strong>
