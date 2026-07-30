@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
   Keyboard,
   Loader2,
   LockKeyhole,
+  Network,
   Server,
   TerminalSquare,
 } from 'lucide-react'
@@ -27,7 +28,9 @@ import {
 const steps = [
   '环境检测',
   '认识系统',
-  '选择镜像',
+  '选择发行版',
+  '磁盘分区',
+  '网络配置',
   '账户设置',
   '写入配置',
   '完成',
@@ -53,6 +56,28 @@ function validateUsername(value: string) {
 
 function validateHostname(value: string) {
   return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(value)
+}
+
+function validateIpv4(value: string, allowCidr = false) {
+  const [address, prefix] = value.split('/')
+  if (prefix !== undefined) {
+    if (!allowCidr || !/^\d{1,2}$/.test(prefix)) return false
+    const prefixLength = Number(prefix)
+    if (prefixLength < 0 || prefixLength > 32) return false
+  }
+  const octets = address.split('.')
+  return (
+    octets.length === 4 &&
+    octets.every((octet) => /^\d{1,3}$/.test(octet) && Number(octet) <= 255)
+  )
+}
+
+function validateDnsServers(value: string) {
+  const servers = value
+    .split(',')
+    .map((server) => server.trim())
+    .filter(Boolean)
+  return servers.length > 0 && servers.every((server) => validateIpv4(server))
 }
 
 export default function InstallPage() {
@@ -85,19 +110,25 @@ export default function InstallPage() {
     })
   }, [])
 
-  const accountValid = useMemo(
-    () =>
-      validateUsername(profile.username) &&
-      validateHostname(profile.hostname),
-    [profile.hostname, profile.username],
-  )
+  const accountValid =
+    validateUsername(profile.username) && validateHostname(profile.hostname)
+  const diskValid =
+    profile.diskSizeMiB >= 512 &&
+    profile.rootSizeMiB >= 256 &&
+    profile.swapSizeMiB >= 0 &&
+    profile.rootSizeMiB + profile.swapSizeMiB + 64 <= profile.diskSizeMiB
+  const networkValid =
+    profile.networkMode === 'dhcp' ||
+    (validateIpv4(profile.ipv4Address, true) &&
+      validateIpv4(profile.gateway) &&
+      validateDnsServers(profile.dnsServers))
 
   async function saveDraft(nextStep?: number) {
     setSaving(true)
     try {
       await writeInstallation({
         ...profile,
-        status: step >= 4 ? 'configured' : 'draft',
+        status: step >= 6 ? 'configured' : 'draft',
       })
       if (typeof nextStep === 'number') setStep(nextStep)
     } finally {
@@ -124,7 +155,9 @@ export default function InstallPage() {
 
   const canContinue =
     (step !== 0 || (environment.wasm && environment.indexedDb)) &&
-    (step !== 3 || accountValid)
+    (step !== 3 || diskValid) &&
+    (step !== 4 || networkValid) &&
+    (step !== 5 || accountValid)
 
   return (
     <div className="page install-page">
@@ -274,18 +307,25 @@ export default function InstallPage() {
                   <h2>选择学习镜像</h2>
                 </div>
               </div>
-              <div className="image-options">
+              <p className="installer-intro">
+                发行版决定用户空间、软件包工具和镜像体积。只有经过浏览器启动验证的镜像才能完成真实安装。
+              </p>
+              <div className="image-options image-options--distributions">
                 <button
                   type="button"
                   className="image-option image-option--selected"
                   onClick={() =>
-                    setProfile({ ...profile, imageProfile: 'core' })
+                    setProfile({
+                      ...profile,
+                      distribution: 'buildroot',
+                      imageProfile: 'core',
+                    })
                   }
                 >
-                  <span className="image-option__flag">当前可验证</span>
+                  <span className="image-option__flag">现在可启动</span>
                   <TerminalSquare size={25} />
-                  <h3>Core · 技术探针</h3>
-                  <p>v86 官方 Buildroot 演示镜像 + BusyBox 串口 Shell，用于真实终端学习。</p>
+                  <h3>Buildroot Core</h3>
+                  <p>轻量 Linux + BusyBox 串口 Shell，适合启动链、rootfs 与嵌入式基础。</p>
                   <dl>
                     <div>
                       <dt>下载</dt>
@@ -301,20 +341,225 @@ export default function InstallPage() {
                     </div>
                   </dl>
                 </button>
-                <div className="image-option image-option--locked">
-                  <span className="image-option__flag">Phase 3</span>
-                  <Cpu size={25} />
-                  <h3>Embedded · 开发版</h3>
-                  <p>计划包含 GCC、binutils、gdb、strace、dtc 与 rootfs 实验。</p>
+                <button
+                  type="button"
+                  className="image-option image-option--locked"
+                  disabled
+                  aria-label="Debian 镜像准备中"
+                >
+                  <span className="image-option__flag">镜像准备中</span>
+                  <Server size={25} />
+                  <h3>Debian</h3>
+                  <p>计划提供 apt、完整 GNU 用户空间和更接近服务器的学习环境。</p>
                   <div className="locked-line">
-                    <LockKeyhole size={15} /> 等自建镜像和许可证验证完成后开放
+                    <LockKeyhole size={15} /> 尚未接入可验证的浏览器镜像
                   </div>
-                </div>
+                </button>
+                <button
+                  type="button"
+                  className="image-option image-option--locked"
+                  disabled
+                  aria-label="Ubuntu 镜像准备中"
+                >
+                  <span className="image-option__flag">镜像准备中</span>
+                  <Cpu size={25} />
+                  <h3>Ubuntu</h3>
+                  <p>计划提供熟悉的 Ubuntu 命令、apt 软件管理与基础服务课程。</p>
+                  <div className="locked-line">
+                    <LockKeyhole size={15} /> 体积与 32 位兼容性仍需验证
+                  </div>
+                </button>
+              </div>
+              <div className="notice notice--warning">
+                <AlertTriangle size={18} />
+                Debian 和 Ubuntu 已加入安装规划，但目前不可选择；网站不会用 Buildroot 冒充它们。
               </div>
             </div>
           )}
 
           {step === 3 && (
+            <div className="installer-content">
+              <div className="installer-title">
+                <HardDrive size={27} />
+                <div>
+                  <span>STORAGE LAYOUT</span>
+                  <h2>分配虚拟磁盘</h2>
+                </div>
+              </div>
+              <p className="installer-intro">
+                练习安装器会检查分区容量并保存方案。当前 Buildroot 探针内置 rootfs，暂时不会真正格式化这个虚拟磁盘。
+              </p>
+              <div className="choice-tabs" role="group" aria-label="分区方式">
+                <button
+                  type="button"
+                  className={profile.diskLayout === 'guided' ? 'is-active' : ''}
+                  onClick={() =>
+                    setProfile({
+                      ...profile,
+                      diskLayout: 'guided',
+                      rootSizeMiB: profile.diskSizeMiB - 192,
+                      swapSizeMiB: 128,
+                    })
+                  }
+                >
+                  自动分区（推荐）
+                </button>
+                <button
+                  type="button"
+                  className={profile.diskLayout === 'manual' ? 'is-active' : ''}
+                  onClick={() => setProfile({ ...profile, diskLayout: 'manual' })}
+                >
+                  手动分区
+                </button>
+              </div>
+              <div className="form-grid storage-form">
+                <label>
+                  <span>虚拟磁盘容量</span>
+                  <select
+                    value={profile.diskSizeMiB}
+                    onChange={(event) => {
+                      const diskSizeMiB = Number(event.target.value)
+                      setProfile({
+                        ...profile,
+                        diskSizeMiB,
+                        rootSizeMiB:
+                          profile.diskLayout === 'guided'
+                            ? diskSizeMiB - 192
+                            : Math.min(profile.rootSizeMiB, diskSizeMiB - 192),
+                      })
+                    }}
+                  >
+                    <option value={512}>512 MiB</option>
+                    <option value={1024}>1 GiB</option>
+                    <option value={2048}>2 GiB</option>
+                    <option value={4096}>4 GiB</option>
+                  </select>
+                </label>
+                <label>
+                  <span>根分区 /（ext4）</span>
+                  <input
+                    type="number"
+                    min="256"
+                    step="64"
+                    value={profile.rootSizeMiB}
+                    disabled={profile.diskLayout === 'guided'}
+                    onChange={(event) =>
+                      setProfile({ ...profile, rootSizeMiB: Number(event.target.value) })
+                    }
+                  />
+                </label>
+                <label>
+                  <span>Swap</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="64"
+                    value={profile.swapSizeMiB}
+                    disabled={profile.diskLayout === 'guided'}
+                    onChange={(event) =>
+                      setProfile({ ...profile, swapSizeMiB: Number(event.target.value) })
+                    }
+                  />
+                </label>
+              </div>
+              <div className="partition-map" aria-label="分区预览">
+                <div className="partition-map__boot" style={{ flex: 64 }}>
+                  <strong>/boot</strong><span>64 MiB</span>
+                </div>
+                <div className="partition-map__root" style={{ flex: profile.rootSizeMiB }}>
+                  <strong>/</strong><span>{profile.rootSizeMiB} MiB · ext4</span>
+                </div>
+                {profile.swapSizeMiB > 0 && (
+                  <div className="partition-map__swap" style={{ flex: profile.swapSizeMiB }}>
+                    <strong>swap</strong><span>{profile.swapSizeMiB} MiB</span>
+                  </div>
+                )}
+              </div>
+              {!diskValid && (
+                <div className="notice notice--danger">
+                  <AlertTriangle size={18} />
+                  分区总容量超过虚拟磁盘，或根分区小于 256 MiB。
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="installer-content">
+              <div className="installer-title">
+                <Network size={27} />
+                <div>
+                  <span>NETWORK SETUP</span>
+                  <h2>配置网络</h2>
+                </div>
+              </div>
+              <p className="installer-intro">
+                DHCP 适合初学者；静态 IPv4 用于学习地址、网关和 DNS 的关系。
+              </p>
+              <div className="choice-tabs" role="group" aria-label="网络配置方式">
+                <button
+                  type="button"
+                  className={profile.networkMode === 'dhcp' ? 'is-active' : ''}
+                  onClick={() => setProfile({ ...profile, networkMode: 'dhcp' })}
+                >
+                  DHCP 自动获取（推荐）
+                </button>
+                <button
+                  type="button"
+                  className={profile.networkMode === 'static' ? 'is-active' : ''}
+                  onClick={() => setProfile({ ...profile, networkMode: 'static' })}
+                >
+                  静态 IPv4
+                </button>
+              </div>
+              {profile.networkMode === 'dhcp' ? (
+                <div className="network-summary">
+                  <Network size={25} />
+                  <div><strong>自动获取网络参数</strong><span>安装方案将记录 DHCP；当前来宾联网仍未开放。</span></div>
+                </div>
+              ) : (
+                <div className="form-grid">
+                  <label>
+                    <span>IPv4 地址 / 前缀</span>
+                    <input
+                      value={profile.ipv4Address}
+                      aria-invalid={!validateIpv4(profile.ipv4Address, true)}
+                      onChange={(event) => setProfile({ ...profile, ipv4Address: event.target.value })}
+                      placeholder="192.168.1.100/24"
+                    />
+                  </label>
+                  <label>
+                    <span>默认网关</span>
+                    <input
+                      value={profile.gateway}
+                      aria-invalid={!validateIpv4(profile.gateway)}
+                      onChange={(event) => setProfile({ ...profile, gateway: event.target.value })}
+                      placeholder="192.168.1.1"
+                    />
+                  </label>
+                  <label>
+                    <span>DNS 服务器（逗号分隔）</span>
+                    <input
+                      value={profile.dnsServers}
+                      onChange={(event) => setProfile({ ...profile, dnsServers: event.target.value })}
+                      placeholder="1.1.1.1, 8.8.8.8"
+                    />
+                  </label>
+                </div>
+              )}
+              {!networkValid && (
+                <div className="notice notice--danger">
+                  <AlertTriangle size={18} /> 请检查 IPv4、网关和 DNS 地址格式。
+                </div>
+              )}
+              <div className="notice notice--warning">
+                <AlertTriangle size={18} />
+                浏览器里的来宾网络需要独立代理和安全设计；本步骤当前只用于教学与保存配置，不承诺公网连接。
+              </div>
+            </div>
+          )}
+
+          {step === 5 && (
             <div className="installer-content">
               <div className="installer-title">
                 <Keyboard size={27} />
@@ -382,7 +627,7 @@ export default function InstallPage() {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 6 && (
             <div className="installer-content">
               <div className="installer-title">
                 <CircleDashed size={27} />
@@ -394,7 +639,10 @@ export default function InstallPage() {
               <div className="provision-list">
                 {[
                   ['环境检测', 'WebAssembly 与浏览器存储可用', true],
-                  ['档案写入', '学习偏好保存到 IndexedDB，尚未注入来宾', true],
+                  ['发行版', 'Buildroot Core 镜像已通过真实启动验证', true],
+                  ['磁盘方案', `${profile.diskSizeMiB} MiB · ext4 根分区 · ${profile.swapSizeMiB} MiB swap`, true],
+                  ['网络方案', profile.networkMode === 'dhcp' ? 'DHCP 自动获取' : `${profile.ipv4Address} · 网关 ${profile.gateway}`, true],
+                  ['档案写入', '安装方案保存到 IndexedDB，尚未注入来宾', true],
                   ['镜像清单', '固定 v86 版本与远程 Buildroot 探针', true],
                   ['真实启动', '进入实验室后启动内核并等待 Shell 提示符', false],
                   ['健康检查', '只有真实来宾就绪后才标记 ready', false],
@@ -420,7 +668,7 @@ export default function InstallPage() {
             </div>
           )}
 
-          {step === 5 && (
+          {step === 7 && (
             <div className="installer-content installer-complete">
               <span className="installer-complete__icon">
                 <Check size={34} />
@@ -433,8 +681,16 @@ export default function InstallPage() {
               </p>
               <div className="complete-summary">
                 <div>
-                  <span>配置</span>
-                  <strong>Core · Buildroot 探针</strong>
+                  <span>发行版</span>
+                  <strong>Buildroot Core</strong>
+                </div>
+                <div>
+                  <span>磁盘方案</span>
+                  <strong>{profile.diskSizeMiB} MiB · ext4</strong>
+                </div>
+                <div>
+                  <span>网络方案</span>
+                  <strong>{profile.networkMode === 'dhcp' ? 'DHCP' : '静态 IPv4'}</strong>
                 </div>
                 <div>
                   <span>学习档案（未注入探针）</span>
@@ -453,7 +709,7 @@ export default function InstallPage() {
             </div>
           )}
 
-          {step < 5 && (
+          {step < 7 && (
             <footer className="installer-footer">
               <button
                 className="button button--ghost"
@@ -463,7 +719,7 @@ export default function InstallPage() {
               >
                 <ArrowLeft size={17} /> 上一步
               </button>
-              {step < 4 ? (
+              {step < 6 ? (
                 <button
                   className="button button--primary"
                   type="button"

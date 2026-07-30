@@ -7,11 +7,24 @@ export type InstallationStatus =
   | 'ready'
   | 'error'
 
+export type LinuxDistribution = 'buildroot' | 'debian' | 'ubuntu'
+export type DiskLayout = 'guided' | 'manual'
+export type NetworkMode = 'dhcp' | 'static'
+
 export interface InstallationProfile {
   schemaVersion: 1
   installationId: string
   status: InstallationStatus
   imageProfile: 'core' | 'embedded'
+  distribution: LinuxDistribution
+  diskLayout: DiskLayout
+  diskSizeMiB: number
+  rootSizeMiB: number
+  swapSizeMiB: number
+  networkMode: NetworkMode
+  ipv4Address: string
+  gateway: string
+  dnsServers: string
   username: string
   hostname: string
   timezone: string
@@ -68,6 +81,15 @@ export function createInstallationDraft(): InstallationProfile {
     installationId: crypto.randomUUID(),
     status: 'draft',
     imageProfile: 'core',
+    distribution: 'buildroot',
+    diskLayout: 'guided',
+    diskSizeMiB: 1024,
+    rootSizeMiB: 832,
+    swapSizeMiB: 128,
+    networkMode: 'dhcp',
+    ipv4Address: '192.168.1.100/24',
+    gateway: '192.168.1.1',
+    dnsServers: '1.1.1.1, 8.8.8.8',
     username: 'student',
     hostname: 'kernel-lab',
     timezone: 'Asia/Shanghai',
@@ -80,14 +102,48 @@ export function createInstallationDraft(): InstallationProfile {
 }
 
 export async function readInstallation() {
-  return (await db()).get('settings', INSTALLATION_KEY)
+  const stored = await (await db()).get('settings', INSTALLATION_KEY)
+  if (!stored) return undefined
+  return normalizeInstallationProfile(stored)
 }
 
 export async function writeInstallation(profile: InstallationProfile) {
-  const value = { ...profile, updatedAt: new Date().toISOString() }
+  const value = {
+    ...normalizeInstallationProfile(profile),
+    updatedAt: new Date().toISOString(),
+  }
   await (await db()).put('settings', value, INSTALLATION_KEY)
   window.dispatchEvent(new CustomEvent(INSTALLATION_EVENT, { detail: value }))
   return value
+}
+
+function normalizeInstallationProfile(
+  profile: Partial<InstallationProfile> &
+    Pick<InstallationProfile, 'installationId' | 'createdAt' | 'updatedAt'>,
+): InstallationProfile {
+  return {
+    schemaVersion: 1,
+    installationId: profile.installationId,
+    status: profile.status ?? 'draft',
+    imageProfile: profile.imageProfile ?? 'core',
+    distribution: profile.distribution ?? 'buildroot',
+    diskLayout: profile.diskLayout ?? 'guided',
+    diskSizeMiB: profile.diskSizeMiB ?? 1024,
+    rootSizeMiB: profile.rootSizeMiB ?? 832,
+    swapSizeMiB: profile.swapSizeMiB ?? 128,
+    networkMode: profile.networkMode ?? 'dhcp',
+    ipv4Address: profile.ipv4Address ?? '192.168.1.100/24',
+    gateway: profile.gateway ?? '192.168.1.1',
+    dnsServers: profile.dnsServers ?? '1.1.1.1, 8.8.8.8',
+    username: profile.username ?? 'student',
+    hostname: profile.hostname ?? 'kernel-lab',
+    timezone: profile.timezone ?? 'Asia/Shanghai',
+    createdAt: profile.createdAt,
+    updatedAt: profile.updatedAt,
+    runtimeVersion: profile.runtimeVersion ?? null,
+    imageId: profile.imageId ?? null,
+    errorMessage: profile.errorMessage ?? null,
+  }
 }
 
 export async function removeInstallation() {

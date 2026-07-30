@@ -93,7 +93,11 @@ export default function HomePage() {
         <div className="status-strip__meta">
           <span>配置</span>
           <strong>
-            {installation?.imageProfile === 'embedded' ? 'Embedded' : 'Core'}
+            {installation?.distribution === 'debian'
+              ? 'Debian'
+              : installation?.distribution === 'ubuntu'
+                ? 'Ubuntu'
+                : 'Buildroot Core'}
           </strong>
         </div>
         <div className="status-strip__meta">
