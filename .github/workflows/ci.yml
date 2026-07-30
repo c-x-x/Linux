@@ -4,7 +4,8 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      - master
+      - preview/technical-probe
 
 permissions:
   contents: read
