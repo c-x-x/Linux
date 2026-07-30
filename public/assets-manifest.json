@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "buildroot-linux-5.6.15-spike",
+  "runtimeVersion": "0.5.424",
+  "distributionMode": "technical-probe-only",
+  "integrityStatus": "sha256-recorded-source-unverified",
+  "notice": "Remote development probe only. It is not a production image and must not be mirrored or redistributed until the matching Buildroot sources, configuration, hashes and legal-info are available.",
+  "assets": {
+    "wasm": {
+      "url": "https://cdn.jsdelivr.net/npm/v86@0.5.424/build/v86.wasm",
+      "immutableReference": true
+    },
+    "bios": {
+      "url": "https://cdn.jsdelivr.net/gh/copy/v86@2f1346b/bios/seabios.bin",
+      "immutableReference": true
+    },
+    "vgaBios": {
+      "url": "https://cdn.jsdelivr.net/gh/copy/v86@2f1346b/bios/vgabios.bin",
+      "immutableReference": true
+    },
+    "kernel": {
+      "url": "/probe-assets/buildroot-bzimage.bin",
+      "size": 5166352,
+      "sha256": "7befbaea31e249d9a518c4b95fa42b2a193d0e3de46250d617cbdeb866ee28b0",
+      "immutableReference": false
+    }
+  }
+}
