@@ -1,6 +1,12 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "git": {
+    "deploymentEnabled": {
+      "master": false
+    }
+  },
   "rewrites": [
     {
       "source": "/probe-assets/buildroot-bzimage.bin",

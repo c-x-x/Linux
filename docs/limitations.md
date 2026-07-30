@@ -66,6 +66,6 @@ Linux 没有封闭的“所有命令”集合。正式可验收口径是：网�
 
 ## 免费部署边界
 
-GitHub + Vercel 可以在个人学习、流量较低且符合免费计划条款时实现零现金成本，但免费额度、可接受用途和限制会变化。Vercel Preview 尚未部署/验证，当前 external rewrite 也没有生产许可结论；技术探针禁止 Production。本项目不提供云端虚拟机、WebSocket TCP 中继或云端持久化。
+GitHub + Vercel 可以在个人学习、流量较低且符合免费计划条款时实现零现金成本，但免费额度、可接受用途和限制会变化。Vercel Preview 尚未部署/验证，当前 external rewrite 也没有生产许可结论；技术探针禁止 Production，`vercel.json` 因此关闭了 `master` 的 Git 自动部署。本项目不提供云端虚拟机、WebSocket TCP 中继或云端持久化。
 
 每次发布前都应重新检查服务条款和用量。不能把“当前目标为零付费”表述为永久免费或无限使用保证。
