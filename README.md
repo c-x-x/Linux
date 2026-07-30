@@ -38,7 +38,7 @@ Kernel Lab 是一个中文 Linux 学习网站，产品分为两条相互衔接�
 - IndexedDB（通过 `idb`）
 - Vitest、Testing Library、Playwright
 
-项目是纯客户端静态网站。V1 不需要 Vercel Functions、数据库、WebSocket 中继或云端虚拟机。
+核心学习环境是浏览器端应用；Vercel 只额外运行一个目标地址写死、只允许 GET/HEAD、带 CDN 缓存的探针字节转发 Function。它不执行终端命令、不保存用户数据，也不需要数据库、WebSocket 中继或云端虚拟机。
 
 ## 从全新克隆开始
 
@@ -96,7 +96,7 @@ npm run preview
 
 推荐让 Vercel Git Integration 负责部署：功能分支和 Pull Request 生成 Preview。当前 `vercel.json` 明确关闭 `master` 的自动部署，`prebuild` 还会拒绝 Vercel Production 构建，避免技术探针意外上线；只有完成自建镜像与许可证门禁后，才能由维护者显式解除这两层保护。仓库中的 GitHub Actions 只做质量检查，不重复调用 Vercel 部署。
 
-当前 `vercel.json` 为探针路径配置了 external rewrite，使浏览器仍从同源路径请求远程文件；这项规则尚未在 Vercel Preview 验证。代理、同源转发和 SHA-256 校验都不等于取得镜像再分发权。在把 Preview 提升为生产前，必须在 Preview 地址重新验证真实启动、串口输入输出、Tab、保存/恢复和失败提示，并完成镜像许可审查。当前技术探针**禁止部署到 Production**。
+当前 `/api/probe-kernel` Vercel Function 从固定上游流式转发探针字节，本地开发由同路径 Vite proxy 代替；前端仍会检查固定大小和 SHA-256。这条新链路尚需在下一次 Vercel Preview 验证。代理、同源转发和 SHA-256 校验都不等于取得镜像再分发权。在把 Preview 提升为生产前，必须在 Preview 地址重新验证真实启动、串口输入输出、Tab、保存/恢复和失败提示，并完成镜像许可审查。当前技术探针**禁止部署到 Production**。
 
 “零付费”只是个人、非商业学习场景在各服务免费计划和用量限制内的目标，不代表无限流量或永久免费。部署前应重新核对 [Vercel 用量与限制](https://vercel.com/docs/limits) 和 GitHub 账户用量。
 

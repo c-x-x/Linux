@@ -25,7 +25,7 @@ const manifest = {
     bios: { url: 'https://example.test/seabios.bin' },
     vgaBios: { url: 'https://example.test/vgabios.bin' },
     kernel: {
-      url: '/probe-assets/buildroot-bzimage.bin',
+      url: '/api/probe-kernel',
       size: 1,
       sha256: '0'.repeat(64),
     },

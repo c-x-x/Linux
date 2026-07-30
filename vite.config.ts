@@ -3,7 +3,7 @@ import type { ProxyOptions } from 'vite'
 import { defineConfig } from 'vitest/config'
 
 const probeProxy: Record<string, ProxyOptions> = {
-  '/probe-assets/buildroot-bzimage.bin': {
+  '/api/probe-kernel': {
     target: 'https://i.copy.sh',
     changeOrigin: true,
     headers: {

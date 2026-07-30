@@ -1,6 +1,6 @@
 # 来宾镜像构建与发布要求
 
-> 当前目录**不包含可分发来宾镜像，也没有已完成的镜像构建脚本**。当前应用通过 `/probe-assets/buildroot-bzimage.bin` 使用一个远程 Phase 0 技术探针；它的生产合规材料未收齐，禁止复制到仓库、部署到 Production 或作为本项目 GitHub Release 发布。
+> 当前目录**不包含可分发来宾镜像，也没有已完成的镜像构建脚本**。当前应用通过 `/api/probe-kernel` 使用一个远程 Phase 0 技术探针；它的生产合规材料未收齐，禁止复制到仓库、部署到 Production 或作为本项目 GitHub Release 发布。
 
 当前探针为 5,166,352 bytes，记录的 SHA-256 是 `7befbaea31e249d9a518c4b95fa42b2a193d0e3de46250d617cbdeb866ee28b0`。本地浏览器已在下载后用 Web Crypto 验证大小和哈希，并启动 Linux 5.6.15 i686/BusyBox。该证据只说明字节完整且可运行，不说明来源不可变或本项目已经满足再分发义务。
 
@@ -80,6 +80,6 @@ Embedded 镜像是后续阶段，必须独立构建和验收，不能只在 UI �
 
 ## 发布位置
 
-大镜像不得进入 Git 历史，也不得放进 Vercel 静态输出或通过 Vercel Function 动态代理。当前 Vite proxy / Vercel external rewrite 只为技术探针解决同源加载：代理远程字节不等于取得再分发权，Vercel 路径也尚未在 Preview 实测，因此禁止用于 Production。
+大镜像不得进入 Git 历史或 Vercel 静态输出。当前 Vite proxy / 固定目标 Vercel Function 只为技术探针解决同源加载：代理远程字节不等于取得再分发权，新 Function 路径也尚未在 Preview 实测，因此禁止用于 Production。正式镜像应使用经许可审核的独立 Release/CDN 资产，而不是长期消耗 Function 流量。
 
 正式候选方案是 GitHub Release 的不可变版本资产；发布前必须从浏览器实际验证 CORS、需要时的 Range、内容长度、哈希和 v86 启动，并完成许可证/源码提供审查。如果 Release 资产不满足要求，应先记录失败证据并评估其他零成本静态来源，不能静默改用 Vercel 承载。
