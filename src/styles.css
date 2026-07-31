@@ -1225,6 +1225,7 @@ button.image-option:disabled { cursor: not-allowed; }
 .terminal-card__controls button:disabled { opacity: .4; cursor: not-allowed; }
 .terminal-progress { height: 2px; background: #202722; }
 .terminal-progress span { display: block; height: 100%; background: var(--accent); transition: width .2s ease; }
+.simulation-banner { padding: 8px 14px; border-bottom: 1px solid #4b3d20; color: #f2cf82; background: #211b0f; font-family: var(--mono); font-size: 11px; letter-spacing: .03em; }
 .terminal-stage { position: relative; min-height: 440px; overflow: hidden; background: #090c0b; }
 .terminal-host { position: absolute; inset: 0; padding: 13px; }
 .terminal-host .xterm { height: 100%; }

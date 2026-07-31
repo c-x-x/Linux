@@ -139,15 +139,18 @@ export default function InstallPage() {
   async function finishConfiguration() {
     setSaving(true)
     try {
+      const simulated = profile.distribution !== 'buildroot'
       const saved = await writeInstallation({
         ...profile,
-        status: 'configured',
-        imageId: 'v86-buildroot-bzimage68-probe',
-        runtimeVersion: '0.5.424',
+        status: simulated ? 'ready' : 'configured',
+        imageId: simulated
+          ? `simulated-${profile.distribution}-learning-environment`
+          : 'v86-buildroot-bzimage68-probe',
+        runtimeVersion: simulated ? 'teaching-simulator-1' : '0.5.424',
         errorMessage: null,
       })
       setProfile(saved)
-      setStep(5)
+      setStep(7)
     } finally {
       setSaving(false)
     }
@@ -166,8 +169,8 @@ export default function InstallPage() {
           <span className="section-kicker">GUIDED INSTALLATION</span>
           <h1>安装 Linux 学习系统</h1>
           <p>
-            这是教学式配置流程：完成后由浏览器加载经过验证的 Linux
-            来宾，而不是访问你的真实磁盘。
+            这是教学式配置流程：Buildroot 可启动真实内核，Debian 和 Ubuntu
+            使用明确标识的浏览器模拟环境，都不会访问你的真实磁盘。
           </p>
         </div>
         <div className="page-heading__meta">
@@ -308,12 +311,13 @@ export default function InstallPage() {
                 </div>
               </div>
               <p className="installer-intro">
-                发行版决定用户空间、软件包工具和镜像体积。只有经过浏览器启动验证的镜像才能完成真实安装。
+                发行版决定用户空间、软件包工具和课程内容。你可以选择真实轻量环境，
+                也可以选择覆盖面更完整的发行版教学模拟。
               </p>
               <div className="image-options image-options--distributions">
                 <button
                   type="button"
-                  className="image-option image-option--selected"
+                  className={profile.distribution === 'buildroot' ? 'image-option image-option--selected' : 'image-option'}
                   onClick={() =>
                     setProfile({
                       ...profile,
@@ -343,37 +347,35 @@ export default function InstallPage() {
                 </button>
                 <button
                   type="button"
-                  className="image-option image-option--locked"
-                  disabled
-                  aria-label="Debian 12 i386 镜像构建中"
+                  className={profile.distribution === 'debian' ? 'image-option image-option--selected' : 'image-option'}
+                  onClick={() => setProfile({ ...profile, distribution: 'debian', imageProfile: 'core' })}
                 >
-                  <span className="image-option__flag">构建路线已确定</span>
+                  <span className="image-option__flag">教学模拟 · 可使用</span>
                   <Server size={25} />
-                  <h3>Debian</h3>
-                  <p>Debian 12 Bookworm i386：计划提供 apt、GNU 用户空间和接近服务器的学习环境。</p>
+                  <h3>Debian 12</h3>
+                  <p>模拟 Bookworm、apt、GNU 用户空间、systemd、磁盘、网络与服务器管理。</p>
                   <div className="locked-line">
-                    <LockKeyhole size={15} /> 等待轻量镜像构建与浏览器启动验收
+                    <CheckCircle2 size={15} /> 无需下载大镜像，安装后立即进入终端
                   </div>
                 </button>
                 <button
                   type="button"
-                  className="image-option image-option--locked"
-                  disabled
-                  aria-label="Ubuntu 当前为课程内容"
+                  className={profile.distribution === 'ubuntu' ? 'image-option image-option--selected' : 'image-option'}
+                  onClick={() => setProfile({ ...profile, distribution: 'ubuntu', imageProfile: 'core' })}
                 >
-                  <span className="image-option__flag">课程已纳入</span>
+                  <span className="image-option__flag">教学模拟 · 可使用</span>
                   <Cpu size={25} />
-                  <h3>Ubuntu</h3>
-                  <p>提供 Ubuntu 命令、apt、服务管理和企业应用知识；暂不提供过期的 32 位系统。</p>
+                  <h3>Ubuntu 24.04 LTS</h3>
+                  <p>模拟 Noble、apt、systemd、SSH、云服务器与企业应用学习场景。</p>
                   <div className="locked-line">
-                    <LockKeyhole size={15} /> 现代 Ubuntu 需要后续 64 位虚拟机路线
+                    <CheckCircle2 size={15} /> 无需在浏览器运行过期的 32 位系统
                   </div>
                 </button>
               </div>
               <div className="notice notice--warning">
                 <AlertTriangle size={18} />
-                Debian 12 i386 已确定为下一套真实镜像；Ubuntu 先进入课程体系。当前 v86 只支持 32 位，
-                网站不会用 Buildroot 或已停止标准支持的旧 Ubuntu 冒充现代 Ubuntu。
+                “教学模拟”会生成符合所选发行版的文件、命令和系统状态，但不是完整虚拟机。
+                需要观察真实内核行为时，请选择 Buildroot Core。
               </div>
             </div>
           )}
@@ -580,7 +582,7 @@ export default function InstallPage() {
                     autoComplete="username"
                     aria-invalid={!validateUsername(profile.username)}
                   />
-                  <small>保存为课程偏好；当前技术探针不会创建这个来宾账户。</small>
+                  <small>{profile.distribution === 'buildroot' ? '保存为课程偏好；真实探针不会创建此账户。' : '会成为模拟终端的用户名和主目录。'}</small>
                 </label>
                 <label>
                   <span>主机名</span>
@@ -591,7 +593,7 @@ export default function InstallPage() {
                     }
                     aria-invalid={!validateHostname(profile.hostname)}
                   />
-                  <small>用于后续自建镜像；当前技术探针不会修改来宾主机名。</small>
+                  <small>{profile.distribution === 'buildroot' ? '保存为课程偏好；真实探针不会修改主机名。' : '会显示在模拟终端提示符和系统信息中。'}</small>
                 </label>
                 <label>
                   <span>时区</span>
@@ -608,7 +610,7 @@ export default function InstallPage() {
                   </select>
                 </label>
                 <div className="identity-preview">
-                  <span>未来自建镜像身份预览</span>
+                  <span>终端身份预览</span>
                   <code>
                     {profile.username || 'student'}@
                     {profile.hostname || 'kernel-lab'}:~$
@@ -623,7 +625,9 @@ export default function InstallPage() {
               )}
               <div className="notice notice--warning">
                 <AlertTriangle size={18} />
-                V1 技术探针只保存这些学习偏好，不把用户名、主机名或时区注入当前远程来宾。
+                {profile.distribution === 'buildroot'
+                  ? 'Buildroot 真实探针只保存这些学习偏好，不会修改内部默认账户。'
+                  : '模拟环境会应用用户名、主机名和时区；这些设置仅保存在当前浏览器。'}
               </div>
             </div>
           )}
@@ -640,13 +644,13 @@ export default function InstallPage() {
               <div className="provision-list">
                 {[
                   ['环境检测', 'WebAssembly 与浏览器存储可用', true],
-                  ['发行版', 'Buildroot Core 镜像已通过真实启动验证', true],
+                  ['发行版', profile.distribution === 'buildroot' ? 'Buildroot Core 已通过真实启动验证' : `${profile.distribution === 'debian' ? 'Debian 12' : 'Ubuntu 24.04 LTS'} 教学模拟环境`, true],
                   ['磁盘方案', `${profile.diskSizeMiB} MiB · ext4 根分区 · ${profile.swapSizeMiB} MiB swap`, true],
                   ['网络方案', profile.networkMode === 'dhcp' ? 'DHCP 自动获取' : `${profile.ipv4Address} · 网关 ${profile.gateway}`, true],
-                  ['档案写入', '安装方案保存到 IndexedDB，尚未注入来宾', true],
-                  ['镜像清单', '固定 v86 版本与远程 Buildroot 探针', true],
-                  ['真实启动', '进入实验室后启动内核并等待 Shell 提示符', false],
-                  ['健康检查', '只有真实来宾就绪后才标记 ready', false],
+                  ['档案写入', '安装方案保存到当前浏览器 IndexedDB', true],
+                  ['运行方式', profile.distribution === 'buildroot' ? '固定 v86 版本与 Buildroot 探针' : '浏览器内教学命令模拟器', true],
+                  ['终端启动', profile.distribution === 'buildroot' ? '进入实验室后启动内核并等待 Shell' : '配置写入后立即可用', profile.distribution !== 'buildroot'],
+                  ['状态验证', profile.distribution === 'buildroot' ? '真实 Shell 就绪后标记 ready' : '模拟配置完整性已检查', profile.distribution !== 'buildroot'],
                 ].map(([title, detail, done]) => (
                   <div key={title as string}>
                     {done ? (
@@ -664,7 +668,9 @@ export default function InstallPage() {
               </div>
               <div className="notice">
                 <Database size={18} />
-                此步骤不会显示随机进度条。镜像下载、启动和健康检查会在命令行实验室中展示真实状态。
+                {profile.distribution === 'buildroot'
+                  ? '镜像下载、启动和健康检查会在命令行实验室展示真实状态。'
+                  : '模拟环境不会下载系统镜像；写入配置后立即生成对应发行版的学习终端。'}
               </div>
             </div>
           )}
@@ -675,15 +681,16 @@ export default function InstallPage() {
                 <Check size={34} />
               </span>
               <span className="section-kicker">CONFIGURATION SAVED</span>
-              <h2>配置完成，等待真实首次启动</h2>
+              <h2>{profile.distribution === 'buildroot' ? '配置完成，等待真实首次启动' : '模拟系统安装完成'}</h2>
               <p>
-                进入实验室并点击“启动真实 Linux”。检测到来宾 Shell
-                提示符后，系统才会从“已配置”变为“可使用”。
+                {profile.distribution === 'buildroot'
+                  ? '进入实验室并启动真实 Linux，检测到 Shell 提示符后即可使用。'
+                  : '进入实验室即可使用发行版教学终端，练习命令、Tab 补全、磁盘、网络和服务管理。'}
               </p>
               <div className="complete-summary">
                 <div>
                   <span>发行版</span>
-                  <strong>Buildroot Core</strong>
+                  <strong>{profile.distribution === 'buildroot' ? 'Buildroot Core（真实）' : profile.distribution === 'debian' ? 'Debian 12（模拟）' : 'Ubuntu 24.04 LTS（模拟）'}</strong>
                 </div>
                 <div>
                   <span>磁盘方案</span>
@@ -694,7 +701,7 @@ export default function InstallPage() {
                   <strong>{profile.networkMode === 'dhcp' ? 'DHCP' : '静态 IPv4'}</strong>
                 </div>
                 <div>
-                  <span>学习档案（未注入探针）</span>
+                  <span>学习档案</span>
                   <strong>
                     {profile.username}@{profile.hostname}
                   </strong>

@@ -13,11 +13,12 @@
 项目自有正式镜像应固定 Buildroot LTS 版本，在 GitHub Actions 的 Linux 环境构建，并发布到带版本的
 GitHub Release；配置、源码哈希、包清单、命令清单、SBOM、legal-info 和 SHA256SUMS 必须一同发布。
 
-## Debian 12 Bookworm i386
+## Debian 12 Bookworm 教学模拟
 
-Debian 12 是当前路线的下一套真实镜像，因为 Debian 官方仍为 Bookworm 提供 i386 安装器，且架构与
-v86 相容。不能直接把数百 MiB 的 netinst ISO 放进 Vercel，也不能让每位学习者在浏览器里重复完成
-完整网络安装。正确做法是：
+网站采用明确标识的浏览器教学模拟器提供 Debian 安装、Shell、apt、systemd、文件、磁盘与网络课程。
+它不会下载数百 MiB 的安装 ISO，也不会声称模拟结果来自真实生产服务器。
+
+若未来恢复真实 Debian 镜像路线，仍需完成：
 
 1. 在固定的 Debian/Buildroot 构建容器中以官方 Bookworm 仓库生成最小 i386 rootfs；
 2. 加入 Bash、coreutils、findutils、grep、sed、gawk、procps、iproute2、iputils、curl、openssh-client、
@@ -27,13 +28,13 @@ v86 相容。不能直接把数百 MiB 的 netinst ISO 放进 Vercel，也不能
 5. 在 CI 中启动 v86，验证 Shell、Tab 补全、课程命令、退出码、快照恢复和磁盘持久化；
 6. 发布不可变 Release 资产，再把清单状态改为 `bootable`。
 
-在这六项完成前，Debian 入口保持不可选择，避免“按钮能点但实际仍启动 Buildroot”。
+在这六项完成前，Debian 入口只标记为“教学模拟”，不能标记为真实 Linux。
 
-## Ubuntu
+## Ubuntu 24.04 LTS 教学模拟
 
-当前 v86 不支持 x86-64，而现代受支持 Ubuntu 不再是适合该运行时的新手 32 位镜像。网站可以完整
-教授 Ubuntu 的 apt、systemd、服务器和企业生态知识，但不会为了显示 Ubuntu Logo 而发布已经结束
-标准支持的旧版本。真实 Ubuntu 环境需要后续接入支持 x86-64 的浏览器虚拟机或受控远程实验容器。
+当前 v86 不支持 x86-64，而现代受支持 Ubuntu 不适合作为该运行时的 32 位镜像。网站使用 Ubuntu
+24.04 LTS 教学模拟器教授 apt、systemd、SSH、服务器和企业生态知识，不会为了显示 Ubuntu Logo
+而发布已经结束标准支持的旧版本。真实 Ubuntu 环境仍需要支持 x86-64 的浏览器虚拟机或受控远程容器。
 
 ## 零成本发布
 

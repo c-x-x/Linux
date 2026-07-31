@@ -14,6 +14,8 @@ import {
 import { AppLink as Link } from '../components/AppLink'
 import { useInstallation } from '../features/installation/useInstallation'
 import { TerminalPane } from '../features/terminal/TerminalPane'
+import { SimulatedTerminalPane } from '../features/terminal/SimulatedTerminalPane'
+import { distributionLabel } from '../features/terminal/simulator'
 import type { VmPhase } from '../features/vm/V86Runtime'
 
 const starterCommands = [
@@ -27,13 +29,15 @@ export default function LabPage() {
   const { installation, loading } = useInstallation()
   const [phase, setPhase] = useState<VmPhase>('idle')
   const [copied, setCopied] = useState<string | null>(null)
+  const simulated = installation?.distribution === 'debian' || installation?.distribution === 'ubuntu'
   const ready = installation?.status === 'ready'
   const statusLabel = useMemo(() => {
+    if (simulated) return '模拟终端已就绪'
     if (phase === 'ready') return 'Shell 已就绪'
     if (phase === 'error') return '启动失败'
     if (phase === 'idle') return '等待启动'
     return '正在建立真实终端'
-  }, [phase])
+  }, [phase, simulated])
 
   async function copyCommand(command: string) {
     await navigator.clipboard.writeText(command)
@@ -45,12 +49,14 @@ export default function LabPage() {
     <div className="page lab-page">
       <header className="lab-heading">
         <div>
-          <span className="section-kicker">REAL GUEST TERMINAL</span>
+          <span className="section-kicker">{simulated ? 'TEACHING SIMULATION' : 'REAL LINUX TERMINAL'}</span>
           <h1>命令行实验室</h1>
-          <p>前端只转发终端字节；命令、错误和退出码都由浏览器内运行的 Linux 产生。</p>
+          <p>{simulated
+            ? `${distributionLabel(installation.distribution)} 教学模拟：命令状态保存在浏览器，输出不代表生产服务器。`
+            : '前端只转发终端字节；命令、错误和退出码都由浏览器内运行的 Linux 产生。'}</p>
         </div>
         <div className="lab-heading__status">
-          <span className={'vm-dot vm-dot--' + phase} />
+          <span className={'vm-dot vm-dot--' + (simulated ? 'ready' : phase)} />
           <div>
             <small>SESSION STATUS</small>
             <strong>{statusLabel}</strong>
@@ -68,7 +74,7 @@ export default function LabPage() {
         </div>
       )}
 
-      {!loading && installation?.status === 'configured' && (
+      {!loading && installation?.status === 'configured' && !simulated && (
         <div className="notice lab-notice">
           <Info size={19} />
           <span>
@@ -113,7 +119,9 @@ export default function LabPage() {
           </Link>
         </aside>
 
-        <TerminalPane onPhaseChange={setPhase} />
+        {simulated && installation
+          ? <SimulatedTerminalPane profile={installation} />
+          : <TerminalPane onPhaseChange={setPhase} />}
 
         <aside className="lab-sidebar lab-sidebar--coach">
           <div className="lab-sidebar__title">
@@ -161,7 +169,9 @@ export default function LabPage() {
           <div className="coach-boundary">
             <TerminalSquare size={16} />
             <span>
-              当前探针是 BusyBox Shell；Bash/Readline 将在自建合规镜像中验证后开放。
+              {simulated
+                ? '当前是教学模拟器：适合课程练习，不用于验证真实内核、性能或生产故障。'
+                : '当前是真实 BusyBox Shell；Debian/Ubuntu 可在安装页选择教学模拟。'}
             </span>
           </div>
         </aside>
@@ -169,19 +179,19 @@ export default function LabPage() {
 
       <section className="lab-facts">
         <article>
-          <strong>{ready ? 'READY' : 'PROBE'}</strong>
+          <strong>{simulated ? 'SIMULATED' : ready ? 'READY' : 'PROBE'}</strong>
           <span>安装状态</span>
         </article>
         <article>
-          <strong>i686</strong>
+          <strong>{simulated ? (installation?.distribution === 'ubuntu' ? 'amd64 教学' : 'i386 教学') : 'i686'}</strong>
           <span>练习环境架构</span>
         </article>
         <article>
-          <strong>64 MB</strong>
+          <strong>{simulated ? '512 MB 教学' : '64 MB'}</strong>
           <span>练习环境内存</span>
         </article>
         <article>
-          <strong>LOCAL</strong>
+          <strong>{simulated ? 'SIMULATED' : 'LOCAL'}</strong>
           <span>执行位置</span>
         </article>
       </section>
