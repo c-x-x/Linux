@@ -86,6 +86,7 @@ Change the Lab layout and terminal card rules to:
 .terminal-card {
   position: sticky;
   top: max(88px, calc((100vh - 590px) / 2));
+  height: 590px;
   align-self: start;
   min-width: 0;
   overflow: hidden;
@@ -102,7 +103,7 @@ Keep `.lab-sidebar` in the shared visual rule, but do not give it sticky positio
 Inside `@media (max-width: 820px)`, extend the existing terminal rule:
 
 ```css
-.terminal-card { position: static; min-height: 560px; }
+.terminal-card { position: static; height: auto; min-height: 560px; }
 ```
 
 - [ ] **Step 3: Run the focused test and verify GREEN**

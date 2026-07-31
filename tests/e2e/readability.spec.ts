@@ -93,3 +93,24 @@ test('main pages do not overflow the mobile viewport', async ({ page }) => {
     expect(dimensions.scrollWidth, `${entry.path} horizontal overflow`).toBeLessThanOrEqual(dimensions.clientWidth + 1)
   }
 })
+
+test('lab terminal stays centered on desktop scrolling and static on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/lab')
+
+  const terminal = page.locator('.terminal-card')
+  await expect(terminal).toBeVisible()
+  await expect(terminal).toHaveCSS('position', 'sticky')
+  await page.evaluate(() => window.scrollTo(0, 500))
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
+
+  const desktopBox = await terminal.boundingBox()
+  expect(desktopBox).not.toBeNull()
+  expect(desktopBox!.y).toBeGreaterThanOrEqual(88)
+  expect(desktopBox!.y + desktopBox!.height).toBeLessThanOrEqual(900)
+  expect(Math.abs(desktopBox!.y + desktopBox!.height / 2 - 450)).toBeLessThanOrEqual(36)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/lab')
+  await expect(terminal).toHaveCSS('position', 'static')
+})

@@ -17,8 +17,8 @@
 只修改 Lab 页相关 CSS：
 
 1. 将 `.lab-layout` 的交叉轴对齐从拉伸改为顶部对齐，避免命令行卡片被最高侧栏拉长。
-2. 为 `.terminal-card` 增加 `position: sticky`、`align-self: start` 和基于视口高度的 `top`。
-3. 在现有 `max-width: 820px` 媒体查询中把 `.terminal-card` 恢复为 `position: static`。
+2. 为 `.terminal-card` 增加 `position: sticky`、`align-self: start`、`590px` 桌面基准高度和基于视口高度的 `top`。明确高度可防止内部 Grid 的 `1fr` 行把终端拉伸到侧栏高度，导致终端本身高于视口。
+3. 在现有 `max-width: 820px` 媒体查询中把 `.terminal-card` 恢复为 `position: static` 和自适应高度。
 
 不增加滚动事件监听，不改变 React 组件层级，也不重新挂载 xterm 或模拟终端。
 
