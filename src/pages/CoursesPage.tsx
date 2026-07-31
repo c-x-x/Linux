@@ -17,8 +17,15 @@ const modeCopy = {
   'embedded-extension': '嵌入式进阶',
 } as const
 
+function lessonIdFromLocation() {
+  const requested = new URLSearchParams(window.location.search).get('lesson')
+  return courseLessons.some((lesson) => lesson.id === requested)
+    ? requested as string
+    : courseLessons[0].id
+}
+
 export default function CoursesPage() {
-  const [activeId, setActiveId] = useState<string>(courseLessons[0].id)
+  const [activeId, setActiveId] = useState<string>(lessonIdFromLocation)
   const [progress, setProgress] = useState<Record<string, CourseProgress>>({})
   const [copied, setCopied] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -34,6 +41,20 @@ export default function CoursesPage() {
       setLoaded(true)
     }).catch(() => setLoaded(true))
   }, [])
+
+  useEffect(() => {
+    const handleNavigation = () => setActiveId(lessonIdFromLocation())
+    window.addEventListener('popstate', handleNavigation)
+    return () => window.removeEventListener('popstate', handleNavigation)
+  }, [])
+
+  function selectLesson(lessonId: string, scroll = true) {
+    setActiveId(lessonId)
+    const url = new URL(window.location.href)
+    url.searchParams.set('lesson', lessonId)
+    window.history.pushState(null, '', url)
+    if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   function saveLesson(lessonId: string, completedSteps: string[], completed: boolean) {
     const value: CourseProgress = { lessonId, completedSteps, completed, updatedAt: new Date().toISOString() }
@@ -53,8 +74,7 @@ export default function CoursesPage() {
     saveLesson(active.id, active.labSteps.map((step) => step.id), true)
     const next = courseLessons[activeIndex + 1]
     if (next) {
-      setActiveId(next.id)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      selectLesson(next.id)
     }
   }
 
@@ -76,7 +96,7 @@ export default function CoursesPage() {
           <h1>从 Linux 认知到嵌入式交付</h1>
           <p>先理解 Linux、发行版与企业应用，再循序练习命令行、系统管理、网络和嵌入式工程。</p>
         </div>
-        <Link className="button button--primary" to="/lab">打开练习终端 <TerminalSquare size={17} /></Link>
+        <Link className="button button--primary" to={`/lab?lesson=${active.id}`}>打开练习终端 <TerminalSquare size={17} /></Link>
       </header>
 
       <div className="notice course-probe-note">
@@ -94,7 +114,7 @@ export default function CoursesPage() {
           {courseLessons.map((lesson, index) => (
             <button key={lesson.id} type="button"
               className={lesson.id === active.id ? 'course-index__item is-active' : 'course-index__item'}
-              onClick={() => setActiveId(lesson.id)}>
+              onClick={() => selectLesson(lesson.id)}>
               <span>{progress[lesson.id]?.completed ? <CheckCircle2 size={18} /> : String(index + 1).padStart(2, '0')}</span>
               <div><strong>{lesson.title}</strong><small>{lesson.level} · {lesson.durationMinutes} 分钟</small></div>
               <ArrowRight size={16} />
@@ -148,7 +168,7 @@ export default function CoursesPage() {
           <section className="course-boundary"><div><Cpu size={18} /><h3>练习边界</h3></div><ul>{active.hardwareLimitations.map((item) => <li key={item}>{item}</li>)}</ul></section>
 
           <footer className="course-navigation">
-            <button type="button" disabled={activeIndex === 0} onClick={() => setActiveId(courseLessons[activeIndex - 1].id)}><ArrowLeft size={16} /> 上一课</button>
+            <button type="button" disabled={activeIndex === 0} onClick={() => selectLesson(courseLessons[activeIndex - 1].id)}><ArrowLeft size={16} /> 上一课</button>
             <span>第 {activeIndex + 1} / {courseLessons.length} 课</span>
             <button className="button--primary" type="button" onClick={finishAndContinue}>{activeIndex === courseLessons.length - 1 ? '完成学习路径' : '完成本课并进入下一课'} <ArrowRight size={16} /></button>
           </footer>
