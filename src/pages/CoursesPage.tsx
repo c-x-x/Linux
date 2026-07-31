@@ -56,22 +56,22 @@ export default function CoursesPage() {
     if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  function saveLesson(lessonId: string, completedSteps: string[], completed: boolean) {
+  async function saveLesson(lessonId: string, completedSteps: string[], completed: boolean) {
     const value: CourseProgress = { lessonId, completedSteps, completed, updatedAt: new Date().toISOString() }
+    await writeCourseProgress(value)
     setProgress((current) => ({ ...current, [lessonId]: value }))
-    void writeCourseProgress(value)
   }
 
-  function toggleStep(stepId: string) {
+  async function toggleStep(stepId: string) {
     const current = progress[active.id]?.completedSteps ?? []
     const completedSteps = current.includes(stepId)
       ? current.filter((id) => id !== stepId)
       : [...current, stepId]
-    saveLesson(active.id, completedSteps, completedSteps.length === active.labSteps.length)
+    await saveLesson(active.id, completedSteps, completedSteps.length === active.labSteps.length)
   }
 
-  function finishAndContinue() {
-    saveLesson(active.id, active.labSteps.map((step) => step.id), true)
+  async function finishAndContinue() {
+    await saveLesson(active.id, active.labSteps.map((step) => step.id), true)
     const next = courseLessons[activeIndex + 1]
     if (next) {
       selectLesson(next.id)
@@ -114,6 +114,7 @@ export default function CoursesPage() {
           {courseLessons.map((lesson, index) => (
             <button key={lesson.id} type="button"
               className={lesson.id === active.id ? 'course-index__item is-active' : 'course-index__item'}
+              aria-current={lesson.id === active.id ? 'step' : undefined}
               onClick={() => selectLesson(lesson.id)}>
               <span>{progress[lesson.id]?.completed ? <CheckCircle2 size={18} /> : String(index + 1).padStart(2, '0')}</span>
               <div><strong>{lesson.title}</strong><small>{lesson.level} · {lesson.durationMinutes} 分钟</small></div>
@@ -144,13 +145,13 @@ export default function CoursesPage() {
           <section className="lab-steps">
             <div className="subsection-heading">
               <div><span>LEARNING TASKS</span><h3>学习与练习任务</h3></div>
-              <button type="button" onClick={() => saveLesson(active.id, [], false)}><RotateCcw size={14} /> 重置本课</button>
+              <button type="button" onClick={() => void saveLesson(active.id, [], false)}><RotateCcw size={14} /> 重置本课</button>
             </div>
             {active.labSteps.map((step, index) => {
               const done = currentSteps.includes(step.id)
               return (
                 <article className={done ? 'lab-step is-done' : 'lab-step'} key={step.id}>
-                  <button className="lab-step__check" type="button" aria-label={done ? '取消完成此任务' : '标记完成此任务'} aria-pressed={done} onClick={() => toggleStep(step.id)}>
+                  <button className="lab-step__check" type="button" aria-label={done ? '取消完成此任务' : '标记完成此任务'} aria-pressed={done} onClick={() => void toggleStep(step.id)}>
                     {done ? <Check size={16} /> : String(index + 1).padStart(2, '0')}
                   </button>
                   <div className="lab-step__body"><span>TASK {String(index + 1).padStart(2, '0')}</span><h4>{step.title}</h4><p>{step.instruction}</p>
@@ -170,7 +171,7 @@ export default function CoursesPage() {
           <footer className="course-navigation">
             <button type="button" disabled={activeIndex === 0} onClick={() => selectLesson(courseLessons[activeIndex - 1].id)}><ArrowLeft size={16} /> 上一课</button>
             <span>第 {activeIndex + 1} / {courseLessons.length} 课</span>
-            <button className="button--primary" type="button" onClick={finishAndContinue}>{activeIndex === courseLessons.length - 1 ? '完成学习路径' : '完成本课并进入下一课'} <ArrowRight size={16} /></button>
+            <button className="button--primary" type="button" onClick={() => void finishAndContinue()}>{activeIndex === courseLessons.length - 1 ? '完成学习路径' : '完成本课并进入下一课'} <ArrowRight size={16} /></button>
           </footer>
         </article>
       </div>

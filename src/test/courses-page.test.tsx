@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CoursesPage from '../pages/CoursesPage'
@@ -22,13 +22,15 @@ describe('CoursesPage progression', () => {
     expect(screen.getByRole('heading', { name: 'Linux 是什么，企业为什么使用它' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /完成本课并进入下一课/ }))
 
-    expect(screen.getByRole('heading', { name: '发行版地图：Ubuntu、Debian 与嵌入式方案' })).toBeInTheDocument()
-    expect(writeCourseProgress).toHaveBeenCalledWith(expect.objectContaining({
-      lessonId: 'linux-overview',
-      completed: true,
-      completedSteps: ['map-stack', 'inspect-system', 'enterprise-map'],
-    }))
-    expect(window.location.search).toBe('?lesson=distributions')
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: '发行版地图：Ubuntu、Debian 与嵌入式方案' })).toBeInTheDocument()
+      expect(writeCourseProgress).toHaveBeenCalledWith(expect.objectContaining({
+        lessonId: 'linux-overview',
+        completed: true,
+        completedSteps: ['map-stack', 'inspect-system', 'enterprise-map'],
+      }))
+      expect(window.location.search).toBe('?lesson=distributions')
+    })
   })
 
   it('opens a valid lesson from the URL and safely ignores an invalid lesson', () => {

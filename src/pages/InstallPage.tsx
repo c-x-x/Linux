@@ -193,6 +193,7 @@ export default function InstallPage() {
                     ? 'installer-step installer-step--done'
                     : 'installer-step'
               }
+              aria-current={index === step ? 'step' : undefined}
               disabled={index > step}
               onClick={() => index < step && setStep(index)}
             >
@@ -295,7 +296,7 @@ export default function InstallPage() {
               </div>
               <div className="notice notice--warning">
                 <AlertTriangle size={18} />
-                当前来宾是 32 位 x86 Buildroot/BusyBox 技术探针，不会伪装成 ARM
+                当前可启动环境是 32 位 x86 Buildroot/BusyBox 技术探针，不会伪装成 ARM
                 开发板。ARM、GPIO、I²C 与 SPI 属于后续硬件扩展课程。
               </div>
             </div>
@@ -318,6 +319,7 @@ export default function InstallPage() {
                 <button
                   type="button"
                   className={profile.distribution === 'buildroot' ? 'image-option image-option--selected' : 'image-option'}
+                  aria-pressed={profile.distribution === 'buildroot'}
                   onClick={() =>
                     setProfile({
                       ...profile,
@@ -348,6 +350,7 @@ export default function InstallPage() {
                 <button
                   type="button"
                   className={profile.distribution === 'debian' ? 'image-option image-option--selected' : 'image-option'}
+                  aria-pressed={profile.distribution === 'debian'}
                   onClick={() => setProfile({ ...profile, distribution: 'debian', imageProfile: 'core' })}
                 >
                   <span className="image-option__flag">教学模拟 · 可使用</span>
@@ -361,6 +364,7 @@ export default function InstallPage() {
                 <button
                   type="button"
                   className={profile.distribution === 'ubuntu' ? 'image-option image-option--selected' : 'image-option'}
+                  aria-pressed={profile.distribution === 'ubuntu'}
                   onClick={() => setProfile({ ...profile, distribution: 'ubuntu', imageProfile: 'core' })}
                 >
                   <span className="image-option__flag">教学模拟 · 可使用</span>
@@ -396,6 +400,7 @@ export default function InstallPage() {
                 <button
                   type="button"
                   className={profile.diskLayout === 'guided' ? 'is-active' : ''}
+                  aria-pressed={profile.diskLayout === 'guided'}
                   onClick={() =>
                     setProfile({
                       ...profile,
@@ -410,6 +415,7 @@ export default function InstallPage() {
                 <button
                   type="button"
                   className={profile.diskLayout === 'manual' ? 'is-active' : ''}
+                  aria-pressed={profile.diskLayout === 'manual'}
                   onClick={() => setProfile({ ...profile, diskLayout: 'manual' })}
                 >
                   手动分区
@@ -503,6 +509,7 @@ export default function InstallPage() {
                 <button
                   type="button"
                   className={profile.networkMode === 'dhcp' ? 'is-active' : ''}
+                  aria-pressed={profile.networkMode === 'dhcp'}
                   onClick={() => setProfile({ ...profile, networkMode: 'dhcp' })}
                 >
                   DHCP 自动获取（推荐）
@@ -510,6 +517,7 @@ export default function InstallPage() {
                 <button
                   type="button"
                   className={profile.networkMode === 'static' ? 'is-active' : ''}
+                  aria-pressed={profile.networkMode === 'static'}
                   onClick={() => setProfile({ ...profile, networkMode: 'static' })}
                 >
                   静态 IPv4
@@ -518,7 +526,7 @@ export default function InstallPage() {
               {profile.networkMode === 'dhcp' ? (
                 <div className="network-summary">
                   <Network size={25} />
-                  <div><strong>自动获取网络参数</strong><span>安装方案将记录 DHCP；当前来宾联网仍未开放。</span></div>
+                  <div><strong>自动获取网络参数</strong><span>安装方案将记录 DHCP；当前练习环境暂不开放联网。</span></div>
                 </div>
               ) : (
                 <div className="form-grid">
@@ -544,6 +552,7 @@ export default function InstallPage() {
                     <span>DNS 服务器（逗号分隔）</span>
                     <input
                       value={profile.dnsServers}
+                      aria-invalid={!validateDnsServers(profile.dnsServers)}
                       onChange={(event) => setProfile({ ...profile, dnsServers: event.target.value })}
                       placeholder="1.1.1.1, 8.8.8.8"
                     />
@@ -557,7 +566,7 @@ export default function InstallPage() {
               )}
               <div className="notice notice--warning">
                 <AlertTriangle size={18} />
-                浏览器里的来宾网络需要独立代理和安全设计；本步骤当前只用于教学与保存配置，不承诺公网连接。
+                浏览器练习环境的网络需要独立代理和安全设计；本步骤当前只用于教学与保存配置，不承诺公网连接。
               </div>
             </div>
           )}
