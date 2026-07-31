@@ -1202,10 +1202,13 @@ button.image-option:disabled { cursor: not-allowed; }
 .lab-sidebar__title strong { display: block; }
 .lab-sidebar__title small { color: var(--muted); font-family: var(--mono); font-size: 8px; letter-spacing: .1em; }
 .lab-sidebar__title strong { margin-top: 4px; font-size: 11px; }
-.lesson-mini-list { padding: 0; margin: 0; list-style: none; }
-.lesson-mini-list li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; min-height: 70px; padding: 12px 14px; border-bottom: 1px solid var(--line); color: var(--faint); }
-.lesson-mini-list li.is-current { color: var(--text); background: var(--accent-soft); }
-.lesson-mini-list li > svg:first-child { color: var(--accent); }
+.lesson-mini-list { max-height: min(720px, 68vh); padding: 0; margin: 0; overflow-y: auto; list-style: none; }
+.lesson-mini-list li { border-bottom: 1px solid var(--line); }
+.lesson-mini-list button { display: grid; width: 100%; min-height: 70px; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 12px 14px; border: 0; color: var(--faint); text-align: left; background: transparent; cursor: pointer; }
+.lesson-mini-list button:hover { color: var(--text); background: var(--bg-raised); }
+.lesson-mini-list button:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--accent); outline-offset: -2px; }
+.lesson-mini-list button.is-current { color: var(--text); background: var(--accent-soft); }
+.lesson-mini-list button > svg:first-child { color: var(--accent); }
 .lesson-mini-list strong,
 .lesson-mini-list small { display: block; }
 .lesson-mini-list strong { font-size: 10px; }

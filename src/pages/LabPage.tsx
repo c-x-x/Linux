@@ -12,23 +12,21 @@ import {
   TerminalSquare,
 } from 'lucide-react'
 import { AppLink as Link } from '../components/AppLink'
+import { findLabLesson, labLessons } from '../content/labLessons'
 import { useInstallation } from '../features/installation/useInstallation'
 import { TerminalPane } from '../features/terminal/TerminalPane'
 import { SimulatedTerminalPane } from '../features/terminal/SimulatedTerminalPane'
 import { distributionLabel } from '../features/terminal/simulator'
 import type { VmPhase } from '../features/vm/V86Runtime'
 
-const starterCommands = [
-  ['uname -a', '查看内核、主机与架构'],
-  ['pwd && ls -la', '确认当前位置并列出隐藏文件'],
-  ["printf 'a\\nb\\n' | grep b", '体验管道与真实标准输出'],
-  ['cat /proc/cpuinfo | head', '读取 Linux 内核暴露的 CPU 信息'],
-]
-
 export default function LabPage() {
   const { installation, loading } = useInstallation()
   const [phase, setPhase] = useState<VmPhase>('idle')
   const [copied, setCopied] = useState<string | null>(null)
+  const [activeLessonId, setActiveLessonId] = useState(() => (
+    findLabLesson(new URLSearchParams(window.location.search).get('lesson')).id
+  ))
+  const activeLesson = findLabLesson(activeLessonId)
   const simulated = installation?.distribution === 'debian' || installation?.distribution === 'ubuntu'
   const ready = installation?.status === 'ready'
   const statusLabel = useMemo(() => {
@@ -43,6 +41,13 @@ export default function LabPage() {
     await navigator.clipboard.writeText(command)
     setCopied(command)
     window.setTimeout(() => setCopied(null), 1_500)
+  }
+
+  function selectLesson(lessonId: string) {
+    setActiveLessonId(lessonId)
+    const url = new URL(window.location.href)
+    url.searchParams.set('lesson', lessonId)
+    window.history.replaceState(null, '', url)
   }
 
   return (
@@ -93,29 +98,26 @@ export default function LabPage() {
             </span>
           </div>
           <ol className="lesson-mini-list">
-            {[
-              ['系统与 Shell', '理解 ttyS0 与当前架构'],
-              ['文件与链接', '路径、目录和 inode'],
-              ['管道与重定向', '连接标准输入输出'],
-              ['权限与进程', '用户、信号和作业'],
-              ['嵌入式系统组成', 'BusyBox、rootfs 与伪文件系统'],
-            ].map(([title, detail], index) => (
-              <li key={title} className={index === 0 ? 'is-current' : ''}>
-                {index === 0 && phase === 'ready' ? (
-                  <CheckCircle2 size={16} />
-                ) : (
-                  <Circle size={14} />
-                )}
-                <span>
-                  <strong>{title}</strong>
-                  <small>{detail}</small>
-                </span>
-                <ChevronRight size={15} />
+            {labLessons.map((lesson) => (
+              <li key={lesson.id}>
+                <button
+                  type="button"
+                  className={lesson.id === activeLesson.id ? 'is-current' : ''}
+                  aria-current={lesson.id === activeLesson.id ? 'step' : undefined}
+                  onClick={() => selectLesson(lesson.id)}
+                >
+                  {lesson.id === activeLesson.id ? <CheckCircle2 size={16} /> : <Circle size={14} />}
+                  <span>
+                    <strong>{lesson.title}</strong>
+                    <small>{lesson.objective}</small>
+                  </span>
+                  <ChevronRight size={15} />
+                </button>
               </li>
             ))}
           </ol>
-          <Link className="sidebar-link" to="/courses">
-            查看全部课程 <ChevronRight size={15} />
+          <Link className="sidebar-link" to={`/courses?lesson=${activeLesson.fullLessonId}`}>
+            打开完整课程 <ChevronRight size={15} />
           </Link>
         </aside>
 
@@ -133,11 +135,11 @@ export default function LabPage() {
           </div>
           <div className="coach-card">
             <span>当前目标</span>
-            <h3>确认你运行在哪里</h3>
-            <p>先观察内核、架构、工作目录和根文件系统，再开始修改文件。</p>
+            <h3>{activeLesson.objective}</h3>
+            <p>{activeLesson.summary}</p>
           </div>
           <div className="command-suggestions">
-            {starterCommands.map(([command, detail]) => (
+            {activeLesson.commands.map(({ command, detail }) => (
               <button
                 key={command}
                 type="button"
@@ -148,6 +150,10 @@ export default function LabPage() {
                 <Clipboard size={14} />
               </button>
             ))}
+          </div>
+          <div className="coach-card coach-card--completion">
+            <span>完成条件</span>
+            <p>{activeLesson.completion}</p>
           </div>
           <div className="shortcut-list">
             <span>
@@ -170,8 +176,8 @@ export default function LabPage() {
             <TerminalSquare size={16} />
             <span>
               {simulated
-                ? '当前是教学模拟器：适合课程练习，不用于验证真实内核、性能或生产故障。'
-                : '当前是真实 BusyBox Shell；Debian/Ubuntu 可在安装页选择教学模拟。'}
+                ? activeLesson.boundary
+                : `当前是真实 BusyBox Shell。${activeLesson.boundary}`}
             </span>
           </div>
         </aside>
