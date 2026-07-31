@@ -5,11 +5,22 @@ import { RefreshCw } from 'lucide-react'
 import type { InstallationProfile } from '../installation/model'
 import { completeInput, createSimulatorState, distributionLabel, executeSimulatedCommand, loadSimulatorState, resetSimulatorState, saveSimulatorState } from './simulator'
 
-export function SimulatedTerminalPane({ profile }: { profile: InstallationProfile }) {
+interface SimulatedTerminalPaneProps {
+  profile: InstallationProfile
+  commandDraft?: string | null
+  onCommandDraftConsumed?: () => void
+}
+
+export function SimulatedTerminalPane({
+  profile,
+  commandDraft,
+  onCommandDraftConsumed,
+}: SimulatedTerminalPaneProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
   const stateRef = useRef(createSimulatorState(profile))
   const lineRef = useRef('')
+  const replaceLineRef = useRef<((value: string) => void) | null>(null)
   const historyIndexRef = useRef(0)
   const [session, setSession] = useState(0)
 
@@ -45,6 +56,7 @@ export function SimulatedTerminalPane({ profile }: { profile: InstallationProfil
       terminal.write(`\r\x1b[2K\x1b[1;32m${profile.username}@${profile.hostname}\x1b[0m:\x1b[1;34m${stateRef.current.cwd === `/home/${profile.username}` ? '~' : stateRef.current.cwd}\x1b[0m$ ${value}`)
       lineRef.current = value
     }
+    replaceLineRef.current = replaceLine
 
     const input = terminal.onData((data) => {
       if (data === '\r') {
@@ -81,8 +93,15 @@ export function SimulatedTerminalPane({ profile }: { profile: InstallationProfil
     const observer = new ResizeObserver(() => fit.fit())
     observer.observe(hostRef.current)
     terminal.focus()
-    return () => { input.dispose(); observer.disconnect(); terminal.dispose(); terminalRef.current = null }
+    return () => { input.dispose(); observer.disconnect(); terminal.dispose(); terminalRef.current = null; replaceLineRef.current = null }
   }, [profile, session])
+
+  useEffect(() => {
+    if (!commandDraft || !replaceLineRef.current) return
+    replaceLineRef.current(commandDraft)
+    terminalRef.current?.focus()
+    onCommandDraftConsumed?.()
+  }, [commandDraft, onCommandDraftConsumed])
 
   return (
     <section className="terminal-card simulated-terminal">

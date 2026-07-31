@@ -28,9 +28,15 @@ import {
 
 interface TerminalPaneProps {
   onPhaseChange?: (phase: VmPhase) => void
+  commandDraft?: string | null
+  onCommandDraftConsumed?: () => void
 }
 
-export function TerminalPane({ onPhaseChange }: TerminalPaneProps) {
+export function TerminalPane({
+  onPhaseChange,
+  commandDraft,
+  onCommandDraftConsumed,
+}: TerminalPaneProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
   const runtimeRef = useRef<V86Runtime | null>(null)
@@ -95,6 +101,13 @@ export function TerminalPane({ onPhaseChange }: TerminalPaneProps) {
       runtimeRef.current = null
     }
   }, [])
+
+  useEffect(() => {
+    if (!commandDraft || status.phase !== 'ready' || !runtimeRef.current) return
+    runtimeRef.current.send(`\u0015${commandDraft}`)
+    terminalRef.current?.focus()
+    onCommandDraftConsumed?.()
+  }, [commandDraft, onCommandDraftConsumed, status.phase])
 
   function updateStatus(event: VmRuntimeEvent) {
     setStatus(event)

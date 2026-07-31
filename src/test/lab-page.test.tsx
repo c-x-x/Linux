@@ -1,7 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useEffect } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import LabPage from '../pages/LabPage'
+
+const terminalMockState = vi.hoisted(() => ({ latestDraft: '' }))
 
 vi.mock('../features/installation/useInstallation', () => ({
   useInstallation: () => ({
@@ -33,7 +36,19 @@ vi.mock('../features/installation/useInstallation', () => ({
 }))
 
 vi.mock('../features/terminal/SimulatedTerminalPane', () => ({
-  SimulatedTerminalPane: () => <div data-testid="simulated-terminal">terminal</div>,
+  SimulatedTerminalPane: ({
+    commandDraft,
+    onCommandDraftConsumed,
+  }: {
+    commandDraft?: string | null
+    onCommandDraftConsumed?: () => void
+  }) => {
+    if (commandDraft) terminalMockState.latestDraft = commandDraft
+    useEffect(() => {
+      if (commandDraft) onCommandDraftConsumed?.()
+    }, [commandDraft, onCommandDraftConsumed])
+    return <div data-testid="simulated-terminal" data-command={terminalMockState.latestDraft}>terminal</div>
+  },
 }))
 
 vi.mock('../features/terminal/TerminalPane', () => ({
@@ -41,7 +56,10 @@ vi.mock('../features/terminal/TerminalPane', () => ({
 }))
 
 describe('LabPage learning companion', () => {
-  beforeEach(() => window.history.replaceState(null, '', '/lab'))
+  beforeEach(() => {
+    terminalMockState.latestDraft = ''
+    window.history.replaceState(null, '', '/lab')
+  })
 
   it('uses real course buttons and updates the coach without remounting the terminal', async () => {
     const user = userEvent.setup()
@@ -59,7 +77,7 @@ describe('LabPage learning companion', () => {
     expect(initial).not.toHaveAttribute('aria-current')
     expect(screen.getByRole('heading', { name: '读懂命令、选项、参数和提示符。' })).toBeInTheDocument()
     expect(screen.getByText(/成功通常为 0/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /pwd.*定位与移动/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /填入终端 pwd/ })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /打开完整课程/ })).toHaveAttribute(
       'href',
       '/courses?lesson=shell-foundations',
@@ -76,5 +94,16 @@ describe('LabPage learning companion', () => {
     window.history.replaceState(null, '', '/lab?lesson=missing')
     render(<LabPage />)
     expect(screen.getByRole('button', { name: /Linux 是什么，企业为什么使用它/ })).toHaveAttribute('aria-current', 'step')
+  })
+
+  it('sends a coached command to the terminal as an unexecuted draft', async () => {
+    const user = userEvent.setup()
+    render(<LabPage />)
+
+    await user.click(screen.getByRole('button', { name: /Shell、路径、帮助与 Tab 补全/ }))
+    await user.click(screen.getByRole('button', { name: /填入终端.*pwd/ }))
+
+    expect(screen.getByTestId('simulated-terminal')).toHaveAttribute('data-command', 'pwd')
+    expect(screen.getByRole('status')).toHaveTextContent('命令已填入，按 Enter 执行')
   })
 })

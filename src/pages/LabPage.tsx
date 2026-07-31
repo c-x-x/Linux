@@ -23,6 +23,8 @@ export default function LabPage() {
   const { installation, loading } = useInstallation()
   const [phase, setPhase] = useState<VmPhase>('idle')
   const [copied, setCopied] = useState<string | null>(null)
+  const [commandDraft, setCommandDraft] = useState<string | null>(null)
+  const [commandStatus, setCommandStatus] = useState('选择推荐命令可填入终端，仍需按 Enter 执行。')
   const [activeLessonId, setActiveLessonId] = useState(() => (
     findLabLesson(new URLSearchParams(window.location.search).get('lesson')).id
   ))
@@ -41,6 +43,15 @@ export default function LabPage() {
     await navigator.clipboard.writeText(command)
     setCopied(command)
     window.setTimeout(() => setCopied(null), 1_500)
+  }
+
+  function fillCommand(command: string) {
+    if (!simulated && phase !== 'ready') {
+      setCommandStatus('请先启动终端并等待 Shell 就绪。')
+      return
+    }
+    setCommandDraft(command)
+    setCommandStatus('正在填入命令…')
   }
 
   function selectLesson(lessonId: string) {
@@ -122,8 +133,26 @@ export default function LabPage() {
         </aside>
 
         {simulated && installation
-          ? <SimulatedTerminalPane profile={installation} />
-          : <TerminalPane onPhaseChange={setPhase} />}
+          ? (
+              <SimulatedTerminalPane
+                profile={installation}
+                commandDraft={commandDraft}
+                onCommandDraftConsumed={() => {
+                  setCommandDraft(null)
+                  setCommandStatus('命令已填入，按 Enter 执行。')
+                }}
+              />
+            )
+          : (
+              <TerminalPane
+                onPhaseChange={setPhase}
+                commandDraft={commandDraft}
+                onCommandDraftConsumed={() => {
+                  setCommandDraft(null)
+                  setCommandStatus('命令已填入，按 Enter 执行。')
+                }}
+              />
+            )}
 
         <aside className="lab-sidebar lab-sidebar--coach">
           <div className="lab-sidebar__title">
@@ -140,17 +169,31 @@ export default function LabPage() {
           </div>
           <div className="command-suggestions">
             {activeLesson.commands.map(({ command, detail }) => (
-              <button
-                key={command}
-                type="button"
-                onClick={() => void copyCommand(command)}
-              >
-                <code>{command}</code>
-                <span>{copied === command ? '已复制' : detail}</span>
-                <Clipboard size={14} />
-              </button>
+              <div className="command-suggestion" key={command}>
+                <button
+                  className="command-suggestion__fill"
+                  type="button"
+                  aria-label={`填入终端 ${command}`}
+                  disabled={!simulated && phase !== 'ready'}
+                  onClick={() => fillCommand(command)}
+                >
+                  <code>{command}</code>
+                  <span>{detail}</span>
+                  <TerminalSquare size={14} />
+                </button>
+                <button
+                  className="command-suggestion__copy"
+                  type="button"
+                  aria-label={`复制命令 ${command}`}
+                  onClick={() => void copyCommand(command)}
+                >
+                  <Clipboard size={14} />
+                </button>
+                {copied === command && <span className="command-suggestion__copied">已复制</span>}
+              </div>
             ))}
           </div>
+          <p className="command-coach-status" role="status" aria-live="polite">{commandStatus}</p>
           <div className="coach-card coach-card--completion">
             <span>完成条件</span>
             <p>{activeLesson.completion}</p>
